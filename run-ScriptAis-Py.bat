@@ -1,0 +1,1 @@
+F:\YOLO\Python36\python.exe "F:\YOLO\ClasificacionAIS\script.py" --dir "F:\YOLO\ClasificacionAIS\test_images"
