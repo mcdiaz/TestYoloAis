@@ -1,0 +1,95 @@
+{ 	"tracked_blob_id":"backpack_438",
+	"init":" ",
+	"finish":" ",
+	"blobs":[
+		{		"id": "backpack_438",
+		"centroid": "{\"x\":0.555556,\"y\":0.592593}",
+		"width": 3.125000,
+		"height": 6.790123,
+		"dir": "0.000000,0.000000",
+		"speed": "0.000000,0.000000",
+		"frame": 14680,
+		"time": " "
+} ,
+		{		"id": "",
+		"centroid": "{\"x\":0.000000,\"y\":0.000000}",
+		"width": 0.000000,
+		"height": 0.000000,
+		"dir": "0.000000,0.000000",
+		"speed": "0.000000,0.000000",
+		"frame": 0,
+		"time": " "
+} ,
+		{		"id": "",
+		"centroid": "{\"x\":0.000000,\"y\":0.000000}",
+		"width": 0.000000,
+		"height": 0.000000,
+		"dir": "0.000000,0.000000",
+		"speed": "0.000000,0.000000",
+		"frame": 0,
+		"time": " "
+} ,
+		{		"id": "",
+		"centroid": "{\"x\":0.000000,\"y\":0.000000}",
+		"width": 0.000000,
+		"height": 0.000000,
+		"dir": "0.000000,0.000000",
+		"speed": "0.000000,0.000000",
+		"frame": 0,
+		"time": " "
+} ,
+		{		"id": "",
+		"centroid": "{\"x\":0.000000,\"y\":0.000000}",
+		"width": 0.000000,
+		"height": 0.000000,
+		"dir": "0.000000,0.000000",
+		"speed": "0.000000,0.000000",
+		"frame": 0,
+		"time": " "
+} 
+] ,
+	"spritesheets":[
+{ 	"tracked_blob_id":"backpack_438",
+	"quality":"high",
+	"fps":15,
+	"resolution":"1280x720",
+	"scImage_url":"D://TEST_YOLO//NONCNN_S2w20T7//\\\\events\\sheets\\1970-12-31\\backpack_438_high_1280x720.jpg",
+	"sprites":[
+		{		"blob_id": "backpack_438",
+		"x_in_sheet": 0,
+		"y_in_sheet": 0,
+		"width": 36,
+		"height": 44,
+		"rotation": 0
+} ,
+		{		"blob_id": "",
+		"x_in_sheet": 0,
+		"y_in_sheet": 44,
+		"width": 36,
+		"height": 44,
+		"rotation": 0
+} ,
+		{		"blob_id": "",
+		"x_in_sheet": 0,
+		"y_in_sheet": 88,
+		"width": 36,
+		"height": 44,
+		"rotation": 0
+} ,
+		{		"blob_id": "",
+		"x_in_sheet": 0,
+		"y_in_sheet": 132,
+		"width": 36,
+		"height": 44,
+		"rotation": 0
+} ,
+		{		"blob_id": "",
+		"x_in_sheet": 0,
+		"y_in_sheet": 176,
+		"width": 36,
+		"height": 44,
+		"rotation": 0
+} ] }
+]
+
+ }

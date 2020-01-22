@@ -1,0 +1,95 @@
+{ 	"tracked_blob_id":"aeroplane_296",
+	"init":" ",
+	"finish":" ",
+	"blobs":[
+		{		"id": "aeroplane_296",
+		"centroid": "{\"x\":0.543403,\"y\":0.641975}",
+		"width": 33.593750,
+		"height": 34.722221,
+		"dir": "0.000000,0.000000",
+		"speed": "0.000000,0.000000",
+		"frame": 9300,
+		"time": " "
+} ,
+		{		"id": "",
+		"centroid": "{\"x\":0.000000,\"y\":0.000000}",
+		"width": 0.000000,
+		"height": 0.000000,
+		"dir": "0.000000,0.000000",
+		"speed": "0.000000,0.000000",
+		"frame": 0,
+		"time": " "
+} ,
+		{		"id": "",
+		"centroid": "{\"x\":0.000000,\"y\":0.000000}",
+		"width": 0.000000,
+		"height": 0.000000,
+		"dir": "0.000000,0.000000",
+		"speed": "0.000000,0.000000",
+		"frame": 0,
+		"time": " "
+} ,
+		{		"id": "",
+		"centroid": "{\"x\":0.000000,\"y\":0.000000}",
+		"width": 0.000000,
+		"height": 0.000000,
+		"dir": "0.000000,0.000000",
+		"speed": "0.000000,0.000000",
+		"frame": 0,
+		"time": " "
+} ,
+		{		"id": "",
+		"centroid": "{\"x\":0.000000,\"y\":0.000000}",
+		"width": 0.000000,
+		"height": 0.000000,
+		"dir": "0.000000,0.000000",
+		"speed": "0.000000,0.000000",
+		"frame": 0,
+		"time": " "
+} 
+] ,
+	"spritesheets":[
+{ 	"tracked_blob_id":"aeroplane_296",
+	"quality":"high",
+	"fps":15,
+	"resolution":"1280x720",
+	"scImage_url":"D://TEST_YOLO//NONCNN_S2w20T7//\\\\events\\sheets\\1970-12-31\\aeroplane_296_high_1280x720.jpg",
+	"sprites":[
+		{		"blob_id": "aeroplane_296",
+		"x_in_sheet": 0,
+		"y_in_sheet": 0,
+		"width": 387,
+		"height": 225,
+		"rotation": 0
+} ,
+		{		"blob_id": "",
+		"x_in_sheet": 387,
+		"y_in_sheet": 0,
+		"width": 387,
+		"height": 225,
+		"rotation": 0
+} ,
+		{		"blob_id": "",
+		"x_in_sheet": 774,
+		"y_in_sheet": 0,
+		"width": 387,
+		"height": 225,
+		"rotation": 0
+} ,
+		{		"blob_id": "",
+		"x_in_sheet": 1161,
+		"y_in_sheet": 0,
+		"width": 387,
+		"height": 225,
+		"rotation": 0
+} ,
+		{		"blob_id": "",
+		"x_in_sheet": 1548,
+		"y_in_sheet": 0,
+		"width": 387,
+		"height": 225,
+		"rotation": 0
+} ] }
+]
+
+ }
