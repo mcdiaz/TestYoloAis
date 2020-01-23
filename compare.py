@@ -3,7 +3,6 @@ import os
 import subprocess
 import time
 from os.path import *
-import csv
 import re
 import argparse
 
@@ -29,10 +28,10 @@ def main():
     runAlg1(args.dirAis , ais)
     runAlg2(args.dirYolo, args.dirStoreYolo, yolo)
     printValues(yolo, ais)
-#end main
+# end main
 
 def readClasificate(labelsObj, ais):
-    #lee el string pasado por parametro labelsObj pasado de la forma etiqueta1_precission1|etiqueta2_precission2... por cada objeto detectado por el algoritmo de ais, los traduce y huelca al diccionario correspondiente a ais
+    # lee el string pasado por parametro labelsObj pasado de la forma etiqueta1_precission1|etiqueta2_precission2... por cada objeto detectado por el algoritmo de ais, los traduce y huelca al diccionario correspondiente a ais
     listLabels=labelsObj.split("|")
     valuePrecission=0.0
     originalLabel=""
@@ -48,7 +47,7 @@ def readClasificate(labelsObj, ais):
     else:
         ais.dict[originalLabel.lower()]=1
     #end if
-#end readClasificate
+#end function
 
 def loadLabels(cad):
     classif = ""
@@ -62,11 +61,11 @@ def loadLabels(cad):
             classif = ""
         #end if
     #end for
-#end loadLabels
+#end function
 
 def loadAis(arrAis, ais):
     for pos in range(0,len(arrAis)):
-        cont=arrAis[pos].lstrip("\r\n").rstrip("\r\n")
+        #cont=arrAis[pos].lstrip("\r\n").rstrip("\r\n")
         if pos is 0:
             ais.finalTime=float(arrAis[pos])
         elif pos is 1:
@@ -76,7 +75,7 @@ def loadAis(arrAis, ais):
         #end if
     #end for
     print(ais.finalTime)
-#end loadAis
+#end function
 
 #folderTrackedBlob posee la ubicacion a la carpeta que posee cada carpeta para cada TB, que cada una de ellas contiene 5 archivos
 #folderTB='F://YOLO//prueba//'
@@ -99,13 +98,13 @@ def runAlg1(folderTB,ais):
     print(resultArray)
     #Se recorre todo el resto del string pasado por ais para obtener la clasificacion con su precision de cada objeto
     loadAis(resultArray, ais)
-#end runAlg1
+#end function
 
 #Toma la salida de la yolo densa, para eso se pasa el comando con todfos sus parametros
 #videoMp4='D://Videos//usina//fanless2//2018-09-02//2018-09-02_15-01-07.mp4'
 #backupOutputDensa='d://temp//YoloUsina15-01-07//'
 def checkLabel(objectLabel, value, yolo):
-    #agrega uno mas a la posicion correspondiente a la etiqueta de yolo de su diccionario
+    # agrega uno mas a la posicion correspondiente a la etiqueta de yolo de su diccionario
     if objectLabel in labels:
         yolo.dict[objectLabel]=value+1
     elif objectLabel=='motorbike' or objectLabel=='bicycle':
@@ -116,12 +115,12 @@ def checkLabel(objectLabel, value, yolo):
         yolo.dict['animal']=value+1
     else:
         yolo.dict[objectLabel]=value+1#podria ser etiquetado como other
-    #end if
-#end checkLabel
+    # end if
+# end function
 
 def getLabelDicYolo(label, yolo):
-    #devuelve la etiqueta correspondiente al diccionario de yolo
-    #para que se corresponda con las de ais
+    # devuelve la etiqueta correspondiente al diccionario de yolo
+    # para que se corresponda con las de ais
     if label in yolo.dict.keys():
         return label
     elif label=='motorbike' or label=='bicycle':
@@ -132,12 +131,12 @@ def getLabelDicYolo(label, yolo):
         return 'animal'
     else:
         return label
-    #end if
-#end getLabelDicYolo
+    # end if
+# end function
 
 def loadDicYOLO(folderYOLO, yolo):
-    #loadDicYOLO lee las carpetitas que contienen los json generados por la salida de la red YOLO y huelca los datos al diccionario
-    #correspondiente al objeto yolo del programita
+    # loadDicYOLO lee las carpetitas que contienen los json generados por la salida de la red YOLO y huelca los datos al diccionario
+    # correspondiente al objeto yolo del programita
     print(folderYOLO)
     for root, dirs, files in os.walk(folderYOLO):
         print(files)
@@ -145,44 +144,44 @@ def loadDicYOLO(folderYOLO, yolo):
             labelObj=getLabelDicYolo(str(lab).split("_")[1], yolo)
             cant = int(yolo.dict.get(labelObj) or 0)
             checkLabel(labelObj,cant,yolo)
-        #end for
+        # end for
         yolo.amount=len(files)
-    #end for
-#end loadDicYolo
+    # end for
+# end function
 
 def runAlg2(dirRunYolo, dirStoreYolo, yolo):
-    #el algoritmo debe ejecutar la red YOLO (densa) y obtener los resultados y completar el diccionario
-    #args:
-    #p=subprocess.Popen([r''+dirRunYolo])#corre el batch file que hizo juan para correr la red
+    # el algoritmo debe ejecutar la red YOLO (densa) y obtener los resultados y completar el diccionario
+    # args:
+    # p=subprocess.Popen([r''+dirRunYolo])#corre el batch file que hizo juan para correr la red
     yolo.initTime=time.time()
-    #p.communicate()
+    # p.communicate()
     loadDicYOLO(dirStoreYolo, yolo)
-    #Calcula el tiempo final de ejecucion de la red densa
+    # Calcula el tiempo final de ejecucion de la red densa
     yolo.finalTime=time.time()-yolo.initTime
     print(yolo.finalTime)
-#end runAlg2
+# end function
 
 def printValues(yolo, ais):
-    #Este metodo imprime una tabla de la forma Yolo | AIS | Human
-    #Volcando los datos de la cantidad de objetos detectados y clasificados
+    # Este metodo imprime una tabla de la forma Yolo | AIS | Human
+    # Volcando los datos de la cantidad de objetos detectados y clasificados
     #
     print("{1:^36s}".format("|", "____________________________________"))
     print("{4}{0:10s}{4}{4}{2:^10s}{4}{4}{3:^10s}{4}".format(" ","\n","YOLO","AIS","|"))
     print("{2}{0:^10s}{2}{2}{1:^22s}{2}".format("Etiqueta","Valor","|"))
     for etiqueta in labels:
-        #por todos los items dentro del diccionario correspondiente a la red densa, itero por su etiqueta y valor correspondiente
+        # por todos los items dentro del diccionario correspondiente a la red densa, itero por su etiqueta y valor correspondiente
         valorYolo=int(yolo.dict.get(etiqueta) or 0)
         valorAis=int(ais.dict.get(etiqueta) or 0)
         print("{2}{0:^10s}{2}{2}{1:^10d}{2}{2}{3:^10d}{2}".format(etiqueta, valorYolo,"|",valorAis))
-    #end for
+    # end for
     etiquetasYolo=set.difference(set(yolo.dict.keys()),labels)
     for etiqueta in etiquetasYolo:
         print("{2}{0:^10s}{2}{2}{1:^10d}{2}{2}{3:^10d}{2}".format(etiqueta, yolo.dict.get(etiqueta), "|", 0))
-    #end for
+    # end for
     print("{1:^36s}".format("|", "____________________________________"))
     print("{0}{1:^10s}{0}{0}{2:^10d}{0}{0}{3:^10d}{0}".format("|", "Total", yolo.amount, ais.amount))
     print("{0}{1:^10s}{0}{0}{2:^10f}{0}{0}{3:^10f}{0}".format("|", "Tiempo", yolo.finalTime, ais.finalTime))
-#end printValues
+# end function
 
 if __name__ == "__main__":
     main()
