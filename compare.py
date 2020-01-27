@@ -15,18 +15,29 @@ class ContainerRN:
         self.dict={}
 
 LABELS=[]
+THRESHOLD=0.85
+TIME_DETECTION_AIS=0.0
 
 def main():
     # {etiqueta, cantidad de objetos detectados}
+    #################################################################################################################################
+    # args del algoritmo de comparacion
     parser = argparse.ArgumentParser()
     parser.add_argument('dirAis', default=os.getcwd() + '//run-ScriptAis-Py.bat', type=str)
     parser.add_argument('dirYolo', default=os.getcwd() + '//run-S2-Yolo3-w20.bat', type=str)
     parser.add_argument('dirStoreYolo', default=os.getcwd() + '//test_yolo//Yolo_S2w20T7//events//sheets//', type=str)
+    parser.add_argument('videoInput', default=os.getcwd() + '//video.mp4', type=str)
+    parser.add_argument('timeDetectAis', default=0.0, type=float)
+    parser.add_argument('umbralClassif', default=0.85,type=float)
     args = parser.parse_args()
+    ##################################################################################################################################
+    TIME_DETECTION_AIS=args.timeDetectAis
+    THRESHOLD=args.umbralClassif
+    paramYolo=['D:\YOLO_CL\yoloApps.exe', 'detect', '-M', '5',  'D:/YOLO_CL/cfg/yolov3.cfg', 'D:/YOLO_CL/cfg/yolov3.weights', '-cnn', '-v',  args.videoInput, '-media', args.dirStoreYolo,  '-MB', '2100',  '-i', '1',  '-w', '30', '-t', '0',  '-schedule',  '-knn']
     aisContain = ContainerRN()
     yoloContain = ContainerRN()
-    runAlgAis(args.dirAis , aisContain)
-    runAlgYolo(args.dirYolo, args.dirStoreYolo, yoloContain)
+    #runAlgAis(args.dirAis , aisContain)
+    runAlgYolo(args.dirYolo, args.dirStoreYolo, paramYolo, yoloContain)
     printValues(yoloContain, aisContain)
 # end main
 
@@ -38,17 +49,18 @@ def readClasificate(labelsObj, aisContain):
     originalLabel=""
     for i in range(0,len(listLabels)-1,1):
         listLabels[i]=listLabels[i].split("_")
+        # se queda con el valor de clasificacion mayor
         if( valuePrecission < float(listLabels[i][1]) ):
             valuePrecission=float(listLabels[i][1])
             originalLabel=listLabels[i][0]
-        #end if
-    #end for
+        # end if
+    # end for
     if originalLabel.lower() in aisContain.dict:
         aisContain.dict[originalLabel.lower()]+=1
     else:
         aisContain.dict[originalLabel.lower()]=1
-    #end if
-#end function
+    # end if
+# end function
 
 def loadLabels(cad):
     # procesar la salida del script de ais
@@ -100,14 +112,17 @@ def runAlgAis(folderTB,aisContain):
     resultPrint = resultPrint[int(resultPrint.find('[')):int(len(resultPrint))]
     print(resultPrint,"Antes de reemplazar los saltos")
     resultPrint=resultPrint.replace(r"\r\n","")
-    print(resultPrint)
+    print(resultPrint,"resultPrint1")
     # se llama al metodo que procesa los primeros caracteres desde el primer [ hasta el proximo ] para cargar los labels correspondientes a las clasificaciones que se estudiaran
     loadLabels(resultPrint)
     # se salta todos los caracteres hasta ']'
+    print(resultPrint,"resultPrint2")
     resultPrint = resultPrint[int(resultPrint.find(']')) + 1:int(len(resultPrint))]
     # se separa el string por ';' en elementos de un arreglo
-    resultArray=resultPrint.split(";").remove("")
-    print(resultArray)
+    print(resultPrint,"resultPrint3")
+    resultArray=resultPrint.split(";")
+    resultArray.remove("")
+    print(resultArray,"este es resultArray")
     # Se recorre el resto del string pasado por ais para obtener la clasificacion con su precision de cada objeto
     loadAis(resultArray, aisContain)
 # end function
@@ -153,35 +168,36 @@ def getLabelDicYolo(label, yoloContain):
     # end if
 # end function
 
-def loadDicYOLO(folderYOLO, yolo):
+def loadDicYOLO(folderYOLO, yoloContain):
     # loadDicYOLO lee las carpetitas que contienen los json generados por la salida de la red YOLO y vuelca los datos al diccionario
     # correspondiente al objeto yolo del programita
     # args:
-    #   folderYOLO:
-    #   yolo:
+    #   folderYOLO: localizacion de las carpetitas de los json que genera la deteccion y clasificacion de la red yolo
+    #   yoloContain: instancia de la clase ContainerRN
     print(folderYOLO)
     for root, dirs, files in os.walk(folderYOLO):
         print(files)
-        for lab in files:
-            labelObj=getLabelDicYolo(str(lab).split("_")[1], yolo)
-            cant = int(yolo.dict.get(labelObj) or 0)
-            checkLabel(labelObj,cant,yolo)
+        for name in files:
+            labelObj=getLabelDicYolo(str(name).split("_")[1], yoloContain)
+            value = int(yoloContain.dict.get(labelObj) or 0)
+            checkLabel(labelObj,value,yoloContain)
         # end for
-        yolo.amount=len(files)
+        yoloContain.amount=len(files)
     # end for
 # end function
 
-def runAlgYolo(dirRunYolo, dirStoreYolo, yoloContain):
+def runAlgYolo(dirRunYolo, dirStoreYolo, paramYolo,yoloContain):
     # ejecuta el script que testea la red YOLO (densa) y con los resultados, completa el diccionario
     # args:
     #   dirRunYolo: direccion donde se encuentra el batch file que corre el script de yolo
     #   dirStoreYolo: direccion de donde se guardaran las carpetitas de todos los objetos json, correspondientes a cada tb
     #   yoloContain: instancia de la clase ContainerRN
     # corre el batch file que hizo juan para correr la red
+    p=subprocess.Popen(paramYolo)
     # p=subprocess.Popen([r''+dirRunYolo])
     # calcula el tiempo inicial
     yoloContain.initTime=time.time()
-    # p.communicate()
+    p.communicate()
     # llama a la funcion encargada de volcar los datos leidos al diccionario de yolo
     loadDicYOLO(dirStoreYolo, yoloContain)
     # Calcula el tiempo final de ejecucion de la red densa
@@ -205,7 +221,7 @@ def printValues(yoloContain, aisContain):
         print("{2}{0:^10s}{2}{2}{1:^10d}{2}{2}{3:^10d}{2}".format(etiqueta, valorYolo,"|",valorAis))
     # end for
     etiquetasYolo=set.difference(set(yoloContain.dict.keys()),LABELS)
-    #por todas las etiquetas diferentes que posee yolo y no se encuentra en labels, las imprime con su valor
+    # por todas las etiquetas diferentes que posee yolo y no se encuentra en labels, las imprime con su valor
     for etiqueta in etiquetasYolo:
         print("{2}{0:^10s}{2}{2}{1:^10d}{2}{2}{3:^10d}{2}".format(etiqueta, yoloContain.dict.get(etiqueta), "|", 0))
     # end for
