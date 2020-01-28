@@ -15,33 +15,8 @@ class ContainerRN:
         self.dict={}
 
 LABELS=[]
-THRESHOLD=0.85
-TIME_DETECTION_AIS=0.0
 
-def main():
-    # {etiqueta, cantidad de objetos detectados}
-    #################################################################################################################################
-    # args del algoritmo de comparacion
-    parser = argparse.ArgumentParser()
-    parser.add_argument('dirAis', default=os.getcwd() + '//run-ScriptAis-Py.bat', type=str)
-    parser.add_argument('dirYolo', default=os.getcwd() + '//run-S2-Yolo3-w20.bat', type=str)
-    parser.add_argument('dirStoreYolo', default=os.getcwd() + '//test_yolo//Yolo_S2w20T7//events//sheets//', type=str)
-    parser.add_argument('videoInput', default=os.getcwd() + '//video.mp4', type=str)
-    parser.add_argument('timeDetectAis', default=0.0, type=float)
-    parser.add_argument('umbralClassif', default=0.85,type=float)
-    args = parser.parse_args()
-    ##################################################################################################################################
-    TIME_DETECTION_AIS=args.timeDetectAis
-    THRESHOLD=args.umbralClassif
-    paramYolo=['D:\YOLO_CL\yoloApps.exe', 'detect', '-M', '5',  'D:/YOLO_CL/cfg/yolov3.cfg', 'D:/YOLO_CL/cfg/yolov3.weights', '-cnn', '-v',  args.videoInput, '-media', args.dirStoreYolo,  '-MB', '2100',  '-i', '1',  '-w', '30', '-t', '0',  '-schedule',  '-knn']
-    aisContain = ContainerRN()
-    yoloContain = ContainerRN()
-    #runAlgAis(args.dirAis , aisContain)
-    runAlgYolo(args.dirYolo, args.dirStoreYolo, paramYolo, yoloContain)
-    printValues(yoloContain, aisContain)
-# end main
-
-def readClasificate(labelsObj, aisContain):
+def readClasificate(labelsObj, aisContain, threshold):
     # lee el string pasado por parametro labelsObj pasado de la forma etiqueta1_precission1|etiqueta2_precission2...
     # por cada objeto detectado por el algoritmo de ais, los traduce y vuelca- al diccionario correspondiente a ais
     listLabels=labelsObj.split("|")
@@ -50,11 +25,12 @@ def readClasificate(labelsObj, aisContain):
     for i in range(0,len(listLabels)-1,1):
         listLabels[i]=listLabels[i].split("_")
         # se queda con el valor de clasificacion mayor
-        if( valuePrecission < float(listLabels[i][1]) ):
-            valuePrecission=float(listLabels[i][1])
-            originalLabel=listLabels[i][0]
+        if valuePrecission == 0.0 and float(listLabels[i][1]) >= threshold or valuePrecission !=0.0 and valuePrecission < float(listLabels[i][1]) :
+            valuePrecission = float(listLabels[i][1])
+            originalLabel = listLabels[i][0]
         # end if
     # end for
+    # setea 1/suma 1 a la posicion accedida por el nombre de la etiqueta
     if originalLabel.lower() in aisContain.dict:
         aisContain.dict[originalLabel.lower()]+=1
     else:
@@ -76,25 +52,26 @@ def loadLabels(cad):
     # end for
 # end function
 
-def loadAis(arrAis, aisContain):
+def loadAis(arrAis, aisContain, threshold, timeDetectAis):
     # recorre el arreglo correspondiente a la salida de ais y vuelca los datos en una instancia de ContainerRN
     # args:
     #   arrAis: arreglo correspondiente a la salida de ais
     #   ais: instancia de la clase ContainerRN
     for pos in range(0,len(arrAis)):
         if pos is 0:
-            aisContain.finalTime=float(arrAis[pos])
+            aisContain.finalTime= float(float(arrAis[pos]) + timeDetectAis)
         elif pos is 1:
             aisContain.amount=int(arrAis[pos])
         else:
             # por cada posicion luego de las dos primeras, llama al metodo que completa el diccionario de ais
-            readClasificate(arrAis[pos],aisContain)
+            readClasificate(arrAis[pos],aisContain, threshold)
         # end if
     # end for
+    print(timeDetectAis,"TIME DET AIS EN LOADAIS")
     print(aisContain.finalTime)
 # end function
 
-def runAlgAis(folderTB,aisContain):
+def runAlgAis(folderTB,aisContain, threshold, timeDetectAis):
     # Ejecuta el script de AIS para detectar y clasificar todos los tb
     # En el script se realiza la iteracion por todas las carpetitas correspondientes a todos los tb detectados
     # El script devuelve un string de la forma "folderImgClasificada.jpg;CAR;0.8|BUS;0.1|TRUCK;0.1"
@@ -124,7 +101,7 @@ def runAlgAis(folderTB,aisContain):
     resultArray.remove("")
     print(resultArray,"este es resultArray")
     # Se recorre el resto del string pasado por ais para obtener la clasificacion con su precision de cada objeto
-    loadAis(resultArray, aisContain)
+    loadAis(resultArray, aisContain, threshold, timeDetectAis)
 # end function
 
 def checkLabel(objectLabel, value, yoloContain):
@@ -209,8 +186,8 @@ def printValues(yoloContain, aisContain):
     # Este metodo imprime una tabla de la forma Yolo | AIS | Human
     # Volcando los datos de la cantidad de objetos detectados y clasificados
     # args:
-    #   yoloContain:
-    #   aisContain:
+    #   yoloContain: instancia de la clase ContainerRN, correspondiente al contenido de yolo
+    #   aisContain: idem anterior, correspondiente al contenido de ais
     print("{1:^36s}".format("|", "____________________________________"))
     print("{4}{0:10s}{4}{4}{2:^10s}{4}{4}{3:^10s}{4}".format(" ","\n","YOLO","AIS","|"))
     print("{2}{0:^10s}{2}{2}{1:^22s}{2}".format("Etiqueta","Valor","|"))
@@ -229,6 +206,27 @@ def printValues(yoloContain, aisContain):
     print("{0}{1:^10s}{0}{0}{2:^10d}{0}{0}{3:^10d}{0}".format("|", "Total", yoloContain.amount, aisContain.amount))
     print("{0}{1:^10s}{0}{0}{2:^10f}{0}{0}{3:^10f}{0}".format("|", "Tiempo", yoloContain.finalTime, aisContain.finalTime))
 # end function
+
+def main():
+    # {etiqueta, cantidad de objetos detectados}
+    #################################################################################################################################
+    # args del algoritmo de comparacion
+    parser = argparse.ArgumentParser()
+    parser.add_argument('dirAis', default=os.getcwd() + '//run-ScriptAis-Py.bat', type=str)
+    parser.add_argument('dirYolo', default=os.getcwd() + '//run-S2-Yolo3-w20.bat', type=str)
+    parser.add_argument('dirStoreYolo', default=os.getcwd() + '//test_yolo//Yolo_S2w20T7//events//sheets//', type=str)
+    parser.add_argument('videoInput', default=os.getcwd() + '//video.mp4', type=str)
+    parser.add_argument('timeDetectAis', type=float)
+    parser.add_argument('-um', default=0.85,type=float)
+    args = parser.parse_args()
+    ##################################################################################################################################
+    paramYolo=['D:\YOLO_CL\yoloApps.exe', 'detect', '-M', '5',  'D:/YOLO_CL/cfg/yolov3.cfg', 'D:/YOLO_CL/cfg/yolov3.weights', '-cnn', '-v',  args.videoInput, '-media', args.dirStoreYolo,  '-MB', '2100',  '-i', '1',  '-w', '30', '-t', '0',  '-schedule',  '-knn']
+    aisContain = ContainerRN()
+    yoloContain = ContainerRN()
+    runAlgAis(args.dirAis , aisContain, args.um, args.timeDetectAis)
+    runAlgYolo(args.dirYolo, args.dirStoreYolo, paramYolo, yoloContain)
+    printValues(yoloContain, aisContain)
+# end main
 
 if __name__ == "__main__":
     main()
