@@ -16,35 +16,39 @@ class ContainerRN:
 
 LABELS=[]
 
-def readClasificate(labelsObj, aisContain, threshold):
+def readClasificate(objLabels, aisContain, threshold):
     # lee el string pasado por parametro labelsObj pasado de la forma etiqueta1_precission1|etiqueta2_precission2...
     # por cada objeto detectado por el algoritmo de ais, los traduce y vuelca- al diccionario correspondiente a ais
-    listLabels=labelsObj.split("|")
+    # args:
+    #   objLabels: clasificaciones de un mismo objeto
+    #   aisContain: instancia de la clase ContainerRN
+    #   threshold: precission mas deseable
+    listLabels=objLabels.split("|")
     valuePrecission=0.0
-    originalLabel=""
+    theBestLabel=""
     for i in range(0,len(listLabels)-1,1):
         listLabels[i]=listLabels[i].split("_")
         # se queda con el valor de clasificacion mayor
         if valuePrecission == 0.0 and float(listLabels[i][1]) >= threshold or valuePrecission !=0.0 and valuePrecission < float(listLabels[i][1]) :
             valuePrecission = float(listLabels[i][1])
-            originalLabel = listLabels[i][0]
+            theBestLabel = listLabels[i][0]
         # end if
     # end for
     # setea 1/suma 1 a la posicion accedida por el nombre de la etiqueta
-    if originalLabel.lower() in aisContain.dict:
-        aisContain.dict[originalLabel.lower()]+=1
+    if theBestLabel.lower() in aisContain.dict:
+        aisContain.dict[theBestLabel.lower()]+=1
     else:
-        aisContain.dict[originalLabel.lower()]=1
+        aisContain.dict[theBestLabel.lower()]=1
     # end if
 # end function
 
-def loadLabels(cad):
+def loadLabels(listLabels):
     # procesar la salida del script de ais
     # primero lee la lista de las etiquetas que utiliza ais y las guarda en una lista propia del programa para luego utilizarla como referencia de las etiquetas que se desea utilizar
     classif = ""
-    for pos in range(0, cad.find(']'), 1):
-        if (cad[pos] not in {"[", "'", ",", " "}):
-            classif += cad[pos]
+    for pos in range(0, listLabels.find(']'), 1):
+        if (listLabels[pos] not in {"[", "'", ",", " "}):
+            classif += listLabels[pos]
         elif classif != "":
             LABELS.append(classif)
             classif = ""
