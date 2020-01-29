@@ -15,9 +15,11 @@ class ContainerRN:
         self.dict={}
 
 LABELS=[]
+YOLO_CONFIG='D:/YOLO_CL/cfg/yolov3.cfg'
+YOLO_WEIGHTS='D:/YOLO_CL/cfg/yolov3.weights'
 
 def readClasificate(objLabels, aisContain, threshold):
-    # lee el string pasado por parametro labelsObj pasado de la forma etiqueta1_precission1|etiqueta2_precission2...
+    # lee el string pasado por parametro objLabels pasado de la forma etiqueta1_precission1|etiqueta2_precission2...
     # por cada objeto detectado por el algoritmo de ais, los traduce y vuelca- al diccionario correspondiente a ais
     # args:
     #   objLabels: clasificaciones de un mismo objeto
@@ -75,7 +77,7 @@ def loadAis(arrAis, aisContain, threshold, timeDetectAis):
     print(aisContain.finalTime)
 # end function
 
-def runAlgAis(folderTB,aisContain, threshold, timeDetectAis):
+def runAlgAis(folderTB,aisContain, threshold, timeDetectAis, folderStAis):
     # Ejecuta el script de AIS para detectar y clasificar todos los tb
     # En el script se realiza la iteracion por todas las carpetitas correspondientes a todos los tb detectados
     # El script devuelve un string de la forma "folderImgClasificada.jpg;CAR;0.8|BUS;0.1|TRUCK;0.1"
@@ -83,6 +85,7 @@ def runAlgAis(folderTB,aisContain, threshold, timeDetectAis):
     #    folderTB posee la ubicacion a la carpeta que posee cada carpeta para cada TB, que cada una de ellas contiene 5 archivos
     #    aisContain es una instancia de la clase ContainerRN, que contiene un diccionario con la cantidad de objetos detectados por cada clasificacion
     # asocia el script de ais para deteccion y clasificacion
+    setBatFileAis(folderTB,folderStAis)
     sub = subprocess.Popen([r''+folderTB], stdout=subprocess.PIPE, shell=False)
     # calcula tiempo inicial
     print("aca toma el tiempo")
@@ -159,23 +162,28 @@ def loadDicYOLO(folderYOLO, yoloContain):
     for root, dirs, files in os.walk(folderYOLO):
         print(files)
         for name in files:
-            labelObj=getLabelDicYolo(str(name).split("_")[1], yoloContain)
-            value = int(yoloContain.dict.get(labelObj) or 0)
-            checkLabel(labelObj,value,yoloContain)
+            print(name,"names in loadDicYOLO")
+            if str(name).endswith('.json'):
+                labelObj=getLabelDicYolo(str(name).split("_")[1], yoloContain)
+                value = int(yoloContain.dict.get(labelObj) or 0)
+                checkLabel(labelObj,value,yoloContain)
+                yoloContain.amount+=1
+            # end if
         # end for
-        yoloContain.amount=len(files)
+    print(yoloContain.amount,"cant filessss")
     # end for
 # end function
 
-def runAlgYolo(dirRunYolo, dirStoreYolo, paramYolo,yoloContain):
+def runAlgYolo(dirRunYolo, dirStoreYolo,yoloContain, dirVideoIn):
     # ejecuta el script que testea la red YOLO (densa) y con los resultados, completa el diccionario
     # args:
     #   dirRunYolo: direccion donde se encuentra el batch file que corre el script de yolo
     #   dirStoreYolo: direccion de donde se guardaran las carpetitas de todos los objetos json, correspondientes a cada tb
     #   yoloContain: instancia de la clase ContainerRN
     # corre el batch file que hizo juan para correr la red
-    p=subprocess.Popen(paramYolo)
-    # p=subprocess.Popen([r''+dirRunYolo])
+    #p=subprocess.Popen(paramYolo)
+    setBatFileYolo(dirRunYolo,dirStoreYolo, dirVideoIn)
+    p=subprocess.Popen([r''+dirRunYolo])
     # calcula el tiempo inicial
     yoloContain.initTime=time.time()
     p.communicate()
@@ -211,24 +219,62 @@ def printValues(yoloContain, aisContain):
     print("{0}{1:^10s}{0}{0}{2:^10f}{0}{0}{3:^10f}{0}".format("|", "Tiempo", yoloContain.finalTime, aisContain.finalTime))
 # end function
 
+def setBatFileAis(folderRunBat, folderStore):
+    contenido=""
+    with open(folderRunBat,'r') as file:
+        column=file.read().split(' ')
+        for pos in range(1,len(column)):
+            if column[pos-1]=='--dir':
+                column[pos]=folderStore
+                break
+            # end if
+        # end for
+        contenido=' '.join(column)
+    # end with
+    with open(folderRunBat,'w') as file:
+        file.write(contenido)
+    # end with
+# end function
+
+def setBatFileYolo(folderRunBat, folderVideo, folderStore):
+    contenido = ""
+    with open(folderRunBat, 'r') as file:
+        column = file.read().split()
+        for pos in range(1, len(column)):
+            if column[pos - 1] == '-v':
+                column[pos] = folderVideo
+            elif column[pos - 1] == '-media':
+                column[pos] = folderStore
+            # end if
+        # end for
+        contenido = ' '.join(column)
+    # end with
+    with open(folderRunBat, 'w') as file:
+        file.write(contenido)
+    # end with
+# end function
+
 def main():
     # {etiqueta, cantidad de objetos detectados}
     #################################################################################################################################
     # args del algoritmo de comparacion
     parser = argparse.ArgumentParser()
-    parser.add_argument('dirAis', default=os.getcwd() + '//run-ScriptAis-Py.bat', type=str)
-    parser.add_argument('dirYolo', default=os.getcwd() + '//run-S2-Yolo3-w20.bat', type=str)
-    parser.add_argument('dirStoreYolo', default=os.getcwd() + '//test_yolo//Yolo_S2w20T7//events//sheets//', type=str)
-    parser.add_argument('videoInput', default=os.getcwd() + '//video.mp4', type=str)
+    # parametro para que el usuario eliga que version de comparacion quiere usar (v1: normal por cantidad de obj ; v2: por hora de obj ; v3: por espacio)
+    parser.add_argument('-v', '--version', type=int, choices=[1,2,3])
+    parser.add_argument('-dirA', default=os.getcwd() + '//run-ScriptAis-Py.bat', type=str)
+    parser.add_argument('-dirStA', default=os.getcwd() + '//test_images', type=str)
+    parser.add_argument('-dirY', default=os.getcwd() + '//run-S2-Yolo3-w20.bat', type=str)
+    parser.add_argument('-dirStY', default=os.getcwd() + '//test_yolo//Yolo_S2w20T7//events//sheets//', type=str)
+    parser.add_argument('-vIn', default=os.getcwd() + '//video.mp4', type=str)
     parser.add_argument('timeDetectAis', type=float)
     parser.add_argument('-um', default=0.85,type=float)
     args = parser.parse_args()
     ##################################################################################################################################
-    paramYolo=['D:\YOLO_CL\yoloApps.exe', 'detect', '-M', '5',  'D:/YOLO_CL/cfg/yolov3.cfg', 'D:/YOLO_CL/cfg/yolov3.weights', '-cnn', '-v',  args.videoInput, '-media', args.dirStoreYolo,  '-MB', '2100',  '-i', '1',  '-w', '30', '-t', '0',  '-schedule',  '-knn']
+    #paramYolo=['D:\YOLO_CL\yoloApps.exe', 'detect', '-M', '5',  YOLO_CONFIG, YOLO_WEIGHTS, '-cnn', '-v',  args.vIn, '-media', args.dirStY,  '-MB', '2100',  '-i', '0',  '-w', '30', '-t', '0',  '-schedule',  '-knn']
     aisContain = ContainerRN()
     yoloContain = ContainerRN()
-    runAlgAis(args.dirAis , aisContain, args.um, args.timeDetectAis)
-    runAlgYolo(args.dirYolo, args.dirStoreYolo, paramYolo, yoloContain)
+    runAlgAis(args.dirA , aisContain, args.um, args.timeDetectAis, args.dirStA)
+    runAlgYolo(args.dirY, args.dirStY, yoloContain, args.vIn)
     printValues(yoloContain, aisContain)
 # end main
 
