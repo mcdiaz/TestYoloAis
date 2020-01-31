@@ -23,7 +23,10 @@ YOLO_WEIGHTS='D:/YOLO_CL/cfg/yolov3.weights'
 def addSort(objContain, jsObj):
     initTime=datetime.strptime(jsObj['init'],'%Y-%m-%d %H:%M:%S.%f').time()
     finishTime=initTime=datetime.strptime(jsObj['finish'],'%Y-%m-%d %H:%M:%S.%f').time()
-    #insertar ordenado en objContain.jsObj() por date
+    #insertar ordenado en objContain.jsObj() por time
+    #if objContain.jsObj:
+    #    for pos in objContain.jsObj:
+    #
     print(initTime)
 
 # end function
@@ -81,11 +84,22 @@ def loadLabels(listLabels):
     # end for
 # end function
 
-def loadAis(arrAis, aisContain, threshold, timeDetectAis):
+def readTimeData(folderData):
+    contain=""
+    with open(folderData,'r') as fileData:
+        contain=str(fileData.readlines(1))
+    contain=contain[contain.find(':') + +1 : len(contain)-1]
+    print("\n",contain,"print contain")
+    timeArr=contain.split('-')
+    print(timeArr,"timeArr")
+
+def loadAis(arrAis, aisContain, threshold, folderData):
     # recorre el arreglo correspondiente a la salida de ais y vuelca los datos en una instancia de ContainerRN
     # args:
     #   arrAis: arreglo correspondiente a la salida de ais
     #   ais: instancia de la clase ContainerRN
+    timeDetectAis=0.0
+    readTimeData(folderData)
     for pos in range(0,len(arrAis)):
         if pos is 0:
             aisContain.finalTime= float(float(arrAis[pos]) + timeDetectAis)
@@ -100,7 +114,7 @@ def loadAis(arrAis, aisContain, threshold, timeDetectAis):
     print(aisContain.finalTime)
 # end function
 
-def runAlgAis(folderTB,aisContain, threshold, timeDetectAis, folderStAis):
+def runAlgAis(folderTB,aisContain, threshold, folderData, folderStAis):
     # Ejecuta el script de AIS para detectar y clasificar todos los tb
     # En el script se realiza la iteracion por todas las carpetitas correspondientes a todos los tb detectados
     # El script devuelve un string de la forma "folderImgClasificada.jpg;CAR;0.8|BUS;0.1|TRUCK;0.1"
@@ -109,6 +123,7 @@ def runAlgAis(folderTB,aisContain, threshold, timeDetectAis, folderStAis):
     #    aisContain es una instancia de la clase ContainerRN, que contiene un diccionario con la cantidad de objetos
     #       detectados por cada clasificacion
     # asocia el script de ais para deteccion y clasificacion
+    """
     setBatFileAis(folderTB,folderStAis)
     sub = subprocess.Popen([r''+folderTB], stdout=subprocess.PIPE, shell=False)
     # calcula tiempo inicial
@@ -116,14 +131,18 @@ def runAlgAis(folderTB,aisContain, threshold, timeDetectAis, folderStAis):
     aisContain.initTime = time.time()
     # convierte caracteres de bytes a string de la salida del script de ais - elimina caracteres como 'b' o '\'
     resultPrint=(str(sub.stdout.read()).encode("utf-8").decode("unicode-escape").encode("latin-1").decode("utf-8"))
-    #resultPrint="['pickup', 'bus', 'car', 'cyclist', 'human', 'truck', 'van'];\r\n3.602055072784424;21;cyclist_46.22|pickup_34.62|human_6.40|car_5.25|van_4.75|truck_1.73|bus_1.03|;human_97.03|cyclist_2.95|bus_0.02|truck_0.00|van_0.00|pickup_0.00|car_0.00|;truck_54.41|pickup_15.22|bus_12.68|human_11.82|cyclist_4.52|car_0.90|van_0.45|;human_71.68|pickup_21.36|cyclist_6.62|car_0.22|truck_0.06|van_0.03|bus_0.02|;human_57.99|truck_24.39|pickup_8.19|bus_7.55|cyclist_1.55|van_0.20|car_0.12|;human_99.81|cyclist_0.17|truck_0.01|pickup_0.00|car_0.00|bus_0.00|van_0.00|;human_93.01|cyclist_6.83|bus_0.09|pickup_0.03|car_0.02|truck_0.01|van_0.01|;cyclist_95.17|bus_3.26|truck_1.04|human_0.37|pickup_0.11|van_0.03|car_0.02|;human_58.99|bus_26.69|cyclist_7.69|van_3.99|truck_2.27|pickup_0.28|car_0.09|;human_68.59|cyclist_28.10|bus_1.55|truck_1.11|pickup_0.52|car_0.08|van_0.05|;human_99.20|cyclist_0.62|truck_0.15|pickup_0.02|bus_0.01|car_0.00|van_0.00|;human_66.44|cyclist_33.25|truck_0.18|bus_0.09|pickup_0.03|van_0.01|car_0.00|;human_71.07|bus_13.01|van_10.08|cyclist_3.86|pickup_1.20|car_0.52|truck_0.27|;human_70.94|cyclist_14.27|pickup_8.90|truck_5.27|bus_0.28|van_0.23|car_0.10|;human_31.48|truck_22.16|bus_21.64|cyclist_12.64|pickup_6.89|van_3.09|car_2.10|;truck_79.07|human_10.33|bus_4.88|cyclist_4.81|pickup_0.78|car_0.09|van_0.05|;bus_36.80|truck_27.55|human_23.75|cyclist_11.17|van_0.52|car_0.15|pickup_0.05|;truck_78.81|human_10.80|bus_3.20|van_2.77|pickup_2.56|car_1.23|cyclist_0.62|;human_32.92|van_26.99|truck_19.32|cyclist_11.62|bus_7.90|pickup_1.05|car_0.19|;human_71.53|truck_24.49|cyclist_3.78|pickup_0.11|bus_0.10|car_0.00|van_0.00|;bus_61.37|truck_19.98|cyclist_10.96|human_7.57|pickup_0.09|car_0.02|van_0.02|\r\n"
+    """
+    resultPrint="['pickup', 'bus', 'car', 'cyclist', 'human', 'truck', 'van'];\r\n3.602055072784424;21;cyclist_46.22|pickup_34.62|human_6.40|car_5.25|van_4.75|truck_1.73|bus_1.03|;human_97.03|cyclist_2.95|bus_0.02|truck_0.00|van_0.00|pickup_0.00|car_0.00|;truck_54.41|pickup_15.22|bus_12.68|human_11.82|cyclist_4.52|car_0.90|van_0.45|;human_71.68|pickup_21.36|cyclist_6.62|car_0.22|truck_0.06|van_0.03|bus_0.02|;human_57.99|truck_24.39|pickup_8.19|bus_7.55|cyclist_1.55|van_0.20|car_0.12|;human_99.81|cyclist_0.17|truck_0.01|pickup_0.00|car_0.00|bus_0.00|van_0.00|;human_93.01|cyclist_6.83|bus_0.09|pickup_0.03|car_0.02|truck_0.01|van_0.01|;cyclist_95.17|bus_3.26|truck_1.04|human_0.37|pickup_0.11|van_0.03|car_0.02|;human_58.99|bus_26.69|cyclist_7.69|van_3.99|truck_2.27|pickup_0.28|car_0.09|;human_68.59|cyclist_28.10|bus_1.55|truck_1.11|pickup_0.52|car_0.08|van_0.05|;human_99.20|cyclist_0.62|truck_0.15|pickup_0.02|bus_0.01|car_0.00|van_0.00|;human_66.44|cyclist_33.25|truck_0.18|bus_0.09|pickup_0.03|van_0.01|car_0.00|;human_71.07|bus_13.01|van_10.08|cyclist_3.86|pickup_1.20|car_0.52|truck_0.27|;human_70.94|cyclist_14.27|pickup_8.90|truck_5.27|bus_0.28|van_0.23|car_0.10|;human_31.48|truck_22.16|bus_21.64|cyclist_12.64|pickup_6.89|van_3.09|car_2.10|;truck_79.07|human_10.33|bus_4.88|cyclist_4.81|pickup_0.78|car_0.09|van_0.05|;bus_36.80|truck_27.55|human_23.75|cyclist_11.17|van_0.52|car_0.15|pickup_0.05|;truck_78.81|human_10.80|bus_3.20|van_2.77|pickup_2.56|car_1.23|cyclist_0.62|;human_32.92|van_26.99|truck_19.32|cyclist_11.62|bus_7.90|pickup_1.05|car_0.19|;human_71.53|truck_24.49|cyclist_3.78|pickup_0.11|bus_0.10|car_0.00|van_0.00|;bus_61.37|truck_19.98|cyclist_10.96|human_7.57|pickup_0.09|car_0.02|van_0.02|\r\n"
+    loadLabels(resultPrint)
     resultPrint = resultPrint[int(resultPrint.find('[')):int(len(resultPrint))]
     print(resultPrint,"Antes de reemplazar los saltos")
     resultPrint=resultPrint.replace(r"\r\n","")
     print(resultPrint,"resultPrint1")
     # se llama al metodo que procesa los primeros caracteres desde el primer [ hasta el proximo ] para cargar los labels
     # correspondientes a las clasificaciones que se estudiaran
+    """
     loadLabels(resultPrint)
+    """
     # se salta todos los caracteres hasta ']'
     print(resultPrint,"resultPrint2")
     resultPrint = resultPrint[int(resultPrint.find(']')) + 1:int(len(resultPrint))]
@@ -133,7 +152,7 @@ def runAlgAis(folderTB,aisContain, threshold, timeDetectAis, folderStAis):
     resultArray.remove("")
     print(resultArray,"este es resultArray")
     # Se recorre el resto del string pasado por ais para obtener la clasificacion con su precision de cada objeto
-    loadAis(resultArray, aisContain, threshold, timeDetectAis)
+    loadAis(resultArray, aisContain, threshold, folderData)
     #readJson(aisContain,folderStAis)
 # end function
 
@@ -293,23 +312,23 @@ def main():
     # ; v2: por hora de obj ; v3: por espacio)
     parser.add_argument('-v', '--version', type=int, choices=[1,2,3])
     parser.add_argument('-dirA', default=os.getcwd() + '//run-ScriptAis-Py.bat', type=str)
-    parser.add_argument('-dirStA', default=os.getcwd() + '//test_images', type=str)
+    parser.add_argument('-dirStA', default='F://YOLO//Prueba_V1//2018-08-05//', type=str)
     parser.add_argument('-dirY', default=os.getcwd() + '//run-S2-Yolo3-w20.bat', type=str)
     parser.add_argument('-dirStY', default=os.getcwd() + '//test_yolo//Yolo_S2w20T7//events//sheets//', type=str)
-    parser.add_argument('-vIn', default=os.getcwd() + '//video.mp4', type=str)
-    parser.add_argument('timeDetectAis', type=float)
+    parser.add_argument('-video', default='F://YOLO//Prueba_V1//2019-08-05_16-09-46.mp4', type=str)
+    parser.add_argument('-timeDetAis', default='F://YOLO//Prueba_V1//datos.txt', type=str)
     parser.add_argument('-um', default=0.85,type=float)
     args = parser.parse_args()
     ###################################################################################################################
     #paramYolo=['D:\YOLO_CL\yoloApps.exe', 'detect', '-M', '5',  YOLO_CONFIG, YOLO_WEIGHTS, '-cnn', '-v',  args.vIn, '-media', args.dirStY,  '-MB', '2100',  '-i', '0',  '-w', '30', '-t', '0',  '-schedule',  '-knn']
     aisContain = ContainerRN()
     yoloContain = ContainerRN()
-    #runAlgAis(args.dirA , aisContain, args.um, args.timeDetectAis, args.dirStA)
-    #runAlgYolo(args.dirY, args.dirStY, yoloContain, args.vIn)
-    for root, dirs, files in os.walk(args.dirStA):
-        for file in files:
-            readJson(aisContain,args.dirStA+"\\"+file[0 : int(file.find('_'))]+"\\"+file)
-    printValues(yoloContain, aisContain)
+    runAlgAis(args.dirA , aisContain, args.um, args.timeDetAis, args.dirStA)
+    #runAlgYolo(args.dirY, args.dirStY, yoloContain, args.video)
+    #for root, dirs, files in os.walk(args.dirStA):
+    #    for file in files:
+    #        readJson(aisContain,args.dirStA+"\\"+file[0 : int(file.find('_'))]+"\\"+file)
+    #printValues(yoloContain, aisContain)
 # end main
 
 if __name__ == "__main__":
