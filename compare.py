@@ -6,7 +6,7 @@ from os.path import *
 import re
 import argparse
 import json
-from datetime import datetime
+from datetime import *
 
 class ContainerRN:
     def __init__(self):
@@ -84,14 +84,21 @@ def loadLabels(listLabels):
     # end for
 # end function
 
-def readTimeData(folderData):
+def readTimeData(folderData, timeDetAis):
     contain=""
     with open(folderData,'r') as fileData:
         contain=str(fileData.readlines(1))
     contain=contain[contain.find(':') + +1 : len(contain)-1]
     print("\n",contain,"print contain")
+    # timeArr tiene dos posiciones: la primera el tiempo final del procesamiento de ais y el segundo, el tiempo inicial
     timeArr=contain.split('-')
-    print(timeArr,"timeArr")
+    timeFinal=(str(timeArr[0]).encode("utf-8").decode("unicode-escape").encode("latin-1").decode("utf-8")).strip("'").strip()
+    timeInit=(str(timeArr[1]).encode("utf-8").decode("unicode-escape").encode("latin-1").decode("utf-8")).strip("'").strip()
+    tF=datetime.strptime(timeFinal,'%H:%M:%S').time() 
+    tI=datetime.strptime(timeInit,'%H:%M:%S').time()
+    print(tF,"-",tI,"timeFinal - timeInit")
+    #diff=
+    #print(diff,"diffseconds")
 
 def loadAis(arrAis, aisContain, threshold, folderData):
     # recorre el arreglo correspondiente a la salida de ais y vuelca los datos en una instancia de ContainerRN
@@ -99,7 +106,7 @@ def loadAis(arrAis, aisContain, threshold, folderData):
     #   arrAis: arreglo correspondiente a la salida de ais
     #   ais: instancia de la clase ContainerRN
     timeDetectAis=0.0
-    readTimeData(folderData)
+    readTimeData(folderData, timeDetectAis)
     for pos in range(0,len(arrAis)):
         if pos is 0:
             aisContain.finalTime= float(float(arrAis[pos]) + timeDetectAis)
