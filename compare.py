@@ -1,13 +1,12 @@
 import sys
 import os
 import subprocess
-import time
 from os.path import *
 import re
 import argparse
 import json
 import time
-from datetime import time,datetime
+from datetime import datetime
 
 
 class ContainerRN:
@@ -21,7 +20,7 @@ class ContainerRN:
 LABELS=[]
 YOLO_CONFIG='D:/YOLO_CL/cfg/yolov3.cfg'
 YOLO_WEIGHTS='D:/YOLO_CL/cfg/yolov3.weights'
-
+"""
 def addSort(objContain, jsObj):
     initTime=datetime.strptime(jsObj['init'],'%Y-%m-%d %H:%M:%S.%f').time()
     finishTime=initTime=datetime.strptime(jsObj['finish'],'%Y-%m-%d %H:%M:%S.%f').time()
@@ -43,7 +42,7 @@ def readJson(objContain, folderJson):
         addSort(objContain,jsObj)
     # end if
 # end function
-
+"""
 def readClasificate(objLabels, aisContain, threshold):
     # lee el string pasado por parametro objLabels pasado de la forma etiqueta1_precission1|etiqueta2_precission2...
     # por cada objeto detectado por el algoritmo de ais, los traduce y vuelca- al diccionario correspondiente a ais
@@ -220,9 +219,9 @@ def loadDicYOLO(folderYOLO, yoloContain):
     for root, dirs, files in os.walk(folderYOLO):
         print(files)
         for name in files:
-            print(name,"names in loadDicYOLO")
-            if str(name).endswith('.json'):
-                labelObj=getLabelDicYolo(str(name).split("_")[1], yoloContain)
+            if str(name).endswith('1280x720.json'):
+                print(name, "names in loadDicYOLO")
+                labelObj=getLabelDicYolo(str(name).split("_")[3], yoloContain)
                 value = int(yoloContain.dict.get(labelObj) or 0)
                 checkLabel(labelObj,value,yoloContain)
                 yoloContain.amount+=1
@@ -246,10 +245,10 @@ def runAlgYolo(dirRunYolo, dirStoreYolo,yoloContain, dirVideoIn):
     # calcula el tiempo inicial
     yoloContain.initTime=time.time()
     p.communicate()
+    yoloContain.finalTime = time.time() - yoloContain.initTime
     # llama a la funcion encargada de volcar los datos leidos al diccionario de yolo
     loadDicYOLO(dirStoreYolo, yoloContain)
     # Calcula el tiempo final de ejecucion de la red densa
-    yoloContain.finalTime=time.time()-yoloContain.initTime
     print(yoloContain.finalTime)
 # end function
 
@@ -297,7 +296,7 @@ def setBatFileAis(folderRunBat, folderStore):
     # end with
 # end function
 
-def setBatFileYolo(folderRunBat, folderVideo, folderStore):
+def setBatFileYolo(folderRunBat, folderStore, folderVideo):
     contenido = ""
     with open(folderRunBat, 'r') as file:
         column = file.read().split()
@@ -327,7 +326,7 @@ def main():
     parser.add_argument('-dirA', default=os.getcwd() + '//run-ScriptAis-Py.bat', type=str)
     parser.add_argument('-dirStA', default='F://YOLO//Prueba_V1//2018-08-05//', type=str)
     parser.add_argument('-dirY', default=os.getcwd() + '//run-S2-Yolo3-w20.bat', type=str)
-    parser.add_argument('-dirStY', default=os.getcwd() + '//test_yolo//Yolo_S2w20T7//events//sheets//', type=str)
+    parser.add_argument('-dirStY', default='D:\TEST_YOLO\Yolo_S2w20T7\events\sheets', type=str)
     parser.add_argument('-video', default='F://YOLO//Prueba_V1//2019-08-05_16-09-46.mp4', type=str)
     parser.add_argument('-timeDetAis', default='F://YOLO//Prueba_V1//datos.txt', type=str)
     parser.add_argument('-um', default=0.85,type=float)
@@ -337,7 +336,7 @@ def main():
     aisContain = ContainerRN()
     yoloContain = ContainerRN()
     runAlgAis(args.dirA , aisContain, args.um, args.timeDetAis, args.dirStA)
-    #runAlgYolo(args.dirY, args.dirStY, yoloContain, args.video)
+    runAlgYolo(args.dirY, args.dirStY, yoloContain, args.video)
     #for root, dirs, files in os.walk(args.dirStA):
     #    for file in files:
     #        readJson(aisContain,args.dirStA+"\\"+file[0 : int(file.find('_'))]+"\\"+file)
