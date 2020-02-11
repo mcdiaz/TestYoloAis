@@ -1,0 +1,9 @@
+Label,YOLO,AIS
+pickup,0,100
+bus,0,17
+car,443,167
+cyclist,7,35
+human,126,81
+truck,18,1
+van,0,75
+Total_time,7735.366328954697,24.59415109062195
