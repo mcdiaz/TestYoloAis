@@ -21,29 +21,7 @@ class ContainerRN:
 LABELS=[]
 YOLO_CONFIG='D:/YOLO_CL/cfg/yolov3.cfg'
 YOLO_WEIGHTS='D:/YOLO_CL/cfg/yolov3.weights'
-"""
-def addSort(objContain, jsObj):
-    initTime=datetime.strptime(jsObj['init'],'%Y-%m-%d %H:%M:%S.%f').time()
-    finishTime=initTime=datetime.strptime(jsObj['finish'],'%Y-%m-%d %H:%M:%S.%f').time()
-    #insertar ordenado en objContain.jsObj() por time
-    #if objContain.jsObj:
-    #    for pos in objContain.jsObj:
-    #
-    print(initTime)
 
-# end function
-
-def readJson(objContain, folderJson):
-    if str(folderJson).endswith('.json'):
-        jsObj=json
-        with open(folderJson,'r') as fileJson:
-            jsObj=json.loads(fileJson.read())
-            print(jsObj)
-        # end with
-        addSort(objContain,jsObj)
-    # end if
-# end function
-"""
 def readClasificate(objLabels, aisContain, threshold):
     # lee el string pasado por parametro objLabels pasado de la forma etiqueta1_precission1|etiqueta2_precission2...
     # por cada objeto detectado por el algoritmo de ais, los traduce y vuelca- al diccionario correspondiente a ais
@@ -129,7 +107,7 @@ def loadAis(arrAis, aisContain, threshold, folderData):
     #print(aisContain.finalTime)
 # end function
 
-def runAlgAis(folderTB,aisContain, threshold, folderData, folderStAis):
+def runAlgAis(dirRunA,aisContain, threshold, folderData, folderStAis):
     # Ejecuta el script de AIS para detectar y clasificar todos los tb
     # En el script se realiza la iteracion por todas las carpetitas correspondientes a todos los tb detectados
     # El script devuelve un string de la forma "folderImgClasificada.jpg;CAR;0.8|BUS;0.1|TRUCK;0.1"
@@ -138,8 +116,8 @@ def runAlgAis(folderTB,aisContain, threshold, folderData, folderStAis):
     #    aisContain es una instancia de la clase ContainerRN, que contiene un diccionario con la cantidad de objetos
     #       detectados por cada clasificacion
     # asocia el script de ais para deteccion y clasificacion
-    setBatFileAis(folderTB,folderStAis)
-    sub = subprocess.Popen([r''+folderTB], stdout=subprocess.PIPE, shell=False)
+    setBatFileAis(dirRunA,folderStAis)
+    sub = subprocess.Popen([r''+dirRunA], stdout=subprocess.PIPE, shell=False)
     # calcula tiempo inicial
     print("aca toma el tiempo")
     #aisContain.initTime = time()
@@ -160,7 +138,7 @@ def runAlgAis(folderTB,aisContain, threshold, folderData, folderStAis):
     resultArray.remove("")
     # Se recorre el resto del string pasado por ais para obtener la clasificacion con su precision de cada objeto
     loadAis(resultArray, aisContain, threshold, folderData)
-    #readJson(aisContain,folderStAis)
+    readAndSortJsons(folderStAis, aisContain)
 # end function
 
 def checkLabel(objectLabel, value, yoloContain):
@@ -246,6 +224,7 @@ def runAlgYolo(dirRunYolo, dirStoreYolo,yoloContain, dirVideoIn):
     loadDicYOLO(dirStoreYolo, yoloContain)
     # Calcula el tiempo final de ejecucion de la red densa
     print(yoloContain.finalTime)
+    readAndSortJsons(dirStoreYolo, yoloContain)
 # end function
 
 def printValues(yoloContain, aisContain):
@@ -349,6 +328,55 @@ def setBatFileYolo(folderRunBat, folderStore, folderVideo):
 # end function
 #######################################################################################################################
 
+#######################################################################################################################
+# leer los json el directorio que contiene todos y cada uno por vez
+def sortJsonList(objContain):
+    """
+    initTime=datetime.strptime(jsObj['init'],'%Y-%m-%d %H:%M:%S.%f').time()
+    finishTime=datetime.strptime(jsObj['finish'],'%Y-%m-%d %H:%M:%S.%f').time()
+    #insertar ordenado en objContain.jsObj() por time
+    if objContain.jsObj:
+    # si la lista de json no esta vacia
+        for obj in objContain.jsObj:
+        # recorre toda la lista de objetos json ya ubicados y añade el nuevo de forma ordenada ascendentemente
+            initObj=(obj['init'], '%Y-%m-%d %H:%M:%S.%f').time()
+            if initTime.__le__(initObj):
+                print(initTime, "-", finishTime)
+    """
+    #for obj in objContain.jsObj:
+    #    print("Todos desordenados")
+    #    print(obj['init'])
+    # funcion y metodo de ordenamiento, para ordenar los json segun tiempo de entrada a escena
+    def takeInitPos(elem):
+        return elem['init']
+    # end function
+    objContain.jsObj.sort(key=takeInitPos)
+    #for obj in objContain.jsObj:
+    #    print("Todos ordenados")
+    #    print(obj['init'])
+# end function
+
+def readAndAddJson(objContain, folderJson):
+    #lee los json ubicados en la direccion de folderJson, los procesa y llama al metodo addSort para guardarlos ordenados en la intancia objContain de ContainerRN
+    if str(folderJson).endswith('.json'):
+        jsObj=json
+        with open(folderJson,'r') as fileJson:
+            jsObj=json.loads(fileJson.read())
+            objContain.jsObj.append(jsObj)
+        # end with
+    # end if
+# end function
+
+def readAndSortJsons(dirJsons, objContain):
+    for root, dirs, files in os.walk(dirJsons):
+        for file in files:
+            readAndAddJson(objContain,dirJsons+"\\"+file[0 : int(file.find('_'))]+"\\"+file)
+        # end for
+    # end for
+    sortJsonList(objContain)
+# end function
+#######################################################################################################################
+
 def main():
     # {etiqueta, cantidad de objetos detectados}
     ###################################################################################################################
@@ -369,12 +397,9 @@ def main():
     #paramYolo=['D:\YOLO_CL\yoloApps.exe', 'detect', '-M', '5',  YOLO_CONFIG, YOLO_WEIGHTS, '-cnn', '-v',  args.vIn, '-media', args.dirStY,  '-MB', '2100',  '-i', '0',  '-w', '30', '-t', '0',  '-schedule',  '-knn']
     aisContain = ContainerRN()
     yoloContain = ContainerRN()
-    runAlgAis(args.dirA , aisContain, args.um, args.timeDetAis, args.dirStA)
-    runAlgYolo(args.dirY, args.dirStY, yoloContain, args.video)
-    #for root, dirs, files in os.walk(args.dirStA):
-    #    for file in files:
-    #        readJson(aisContain,args.dirStA+"\\"+file[0 : int(file.find('_'))]+"\\"+file)
-    printValues(yoloContain, aisContain)
+    #runAlgAis(args.dirA , aisContain, args.um, args.timeDetAis, args.dirStA)
+    #runAlgYolo(args.dirY, args.dirStY, yoloContain, args.video)
+    readAndSortJsons(args.dirStA, aisContain)
 # end main
 
 if __name__ == "__main__":
