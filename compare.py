@@ -330,7 +330,7 @@ def setBatFileYolo(folderRunBat, folderStore, folderVideo):
 
 #######################################################################################################################
 # leer los json el directorio que contiene todos y cada uno por vez
-def sortJsonList(objContain):
+def sortJsonList(listJson, atribute):
     """
     initTime=datetime.strptime(jsObj['init'],'%Y-%m-%d %H:%M:%S.%f').time()
     finishTime=datetime.strptime(jsObj['finish'],'%Y-%m-%d %H:%M:%S.%f').time()
@@ -344,25 +344,29 @@ def sortJsonList(objContain):
                 print(initTime, "-", finishTime)
     """
     #for obj in objContain.jsObj:
+    # recorrido de todos los json desordenados por fecha
     #    print("Todos desordenados")
     #    print(obj['init'])
-    # funcion y metodo de ordenamiento, para ordenar los json segun tiempo de entrada a escena
+    # funcion y metodo de ordenamiento, para ordenar todos los json ubicados en la lista correspondiente a la instancia de ContainerRN segun tiempo de entrada a escena
     def takeInitPos(elem):
-        return elem['init']
+        return datetime.strptime(elem[atribute],'%Y-%m-%d %H:%M:%S.%f').time()
     # end function
-    objContain.jsObj.sort(key=takeInitPos)
-    #for obj in objContain.jsObj:
-    #    print("Todos ordenados")
-    #    print(obj['init'])
+    listJson.sort(key=takeInitPos)
+    print("#################################### Todos ordenados ######################################################")
+    for obj in listJson:
+    # recorrido de todos los json ordenados por fecha de forma ascendente
+        print(obj['init'])
 # end function
 
 def readAndAddJson(objContain, folderJson):
-    #lee los json ubicados en la direccion de folderJson, los procesa y llama al metodo addSort para guardarlos ordenados en la intancia objContain de ContainerRN
+    # lee los json ubicados en la direccion de folderJson, los procesa y llama al metodo addSort para guardarlos ordenados en la intancia objContain de ContainerRN
     if str(folderJson).endswith('.json'):
-        jsObj=json
+        findedJson=json
         with open(folderJson,'r') as fileJson:
-            jsObj=json.loads(fileJson.read())
-            objContain.jsObj.append(jsObj)
+            findedJson=json.loads(fileJson.read())
+            # llamado al metodo para que ordene la lista de blobs por el atributo de time de forma ascendente
+            #sortJsonList(findedJson['blob'],'time')
+            objContain.jsObj.append(findedJson)
         # end with
     # end if
 # end function
@@ -373,7 +377,7 @@ def readAndSortJsons(dirJsons, objContain):
             readAndAddJson(objContain,dirJsons+"\\"+file[0 : int(file.find('_'))]+"\\"+file)
         # end for
     # end for
-    sortJsonList(objContain)
+    sortJsonList(objContain.jsObj, 'init')
 # end function
 #######################################################################################################################
 
