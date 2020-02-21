@@ -8,7 +8,18 @@ import json
 import time
 from datetime import datetime
 import csv
+import ast
 
+class ContainerBlob:
+    def __init__(self):
+        self.id=""
+        self.centroid={}
+        self.width=0
+        self.height=0
+        self.dir=""
+        self.speed=""
+        self.frame=0
+        self.time=0
 
 class ContainerRN:
     def __init__(self):
@@ -138,7 +149,7 @@ def runAlgAis(dirRunA,aisContain, threshold, folderData, folderStAis):
     resultArray.remove("")
     # Se recorre el resto del string pasado por ais para obtener la clasificacion con su precision de cada objeto
     loadAis(resultArray, aisContain, threshold, folderData)
-    readAndSortJsons(folderStAis, aisContain)
+    #readAndSortJsons(folderStAis, aisContain)
 # end function
 
 def checkLabel(objectLabel, value, yoloContain):
@@ -348,6 +359,7 @@ def sortJsonList(listJson, atribute):
     #    print("Todos desordenados")
     #    print(obj['init'])
     # funcion y metodo de ordenamiento, para ordenar todos los json ubicados en la lista correspondiente a la instancia de ContainerRN segun tiempo de entrada a escena
+    print(listJson)
     def takeInitPos(elem):
         return datetime.strptime(elem[atribute],'%Y-%m-%d %H:%M:%S.%f').time()
     # end function
@@ -365,8 +377,15 @@ def readAndAddJson(objContain, folderJson):
         with open(folderJson,'r') as fileJson:
             findedJson=json.loads(fileJson.read())
             # llamado al metodo para que ordene la lista de blobs por el atributo de time de forma ascendente
-            #sortJsonList(findedJson['blob'],'time')
+            blobs=json.loads(findedJson['blobs'])
+            print(list(blobs[0]).)
+
+
+            #(blobs.encode("utf-8").decode("unicode-escape").encode("latin-1").decode("utf-8"))
+
+            sortJsonList(blobs,'time')
             objContain.jsObj.append(findedJson)
+           # print(blobs)
         # end with
     # end if
 # end function
