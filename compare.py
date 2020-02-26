@@ -340,6 +340,21 @@ def setBatFileYolo(folderRunBat, folderStore, folderVideo):
 #######################################################################################################################
 
 #######################################################################################################################
+#para procesar los blobs apartir de una fecha especifica
+def findingBlob(time,centroid,width,height,objContain):
+    # args:
+    #   time: tiempo que se quiere analizar
+    #   objContain: instancia de la clase ContainerRN, que posee el atributo jsObj con todos los objetos json detectados
+    #       por el algoritmo AIS o YOLO segun corresponda todos los json que tiene estan ordenados por el tiempo de
+    #       inicio a escena y cada blob, de cada uno, estan ordenados ascendentemente por tiempo de deteccion tambien
+    for tb in objContain.jsObj:
+        if datetime.strptime(tb['finish'],'%Y-%m-%d %H:%M:%S.%f').time() >= datetime.strptime(time,'%Y-%m-%d %H:%M:%S.%f').time():
+            for blob in tb['blobs']:
+                if datetime.strptime(blob['time'],'%Y-%m-%d %H:%M:%S.%f').time() == datetime.strptime(time,'%Y-%m-%d %H:%M:%S.%f').time():
+                    print(blob,"encontro el blob que matchea con el tiempo")
+#######################################################################################################################
+
+#######################################################################################################################
 # leer los json el directorio que contiene todos y cada uno por vez
 def sortJsonList(listJson, atribute):
     """
@@ -359,15 +374,18 @@ def sortJsonList(listJson, atribute):
     #    print("Todos desordenados")
     #    print(obj['init'])
     # funcion y metodo de ordenamiento, para ordenar todos los json ubicados en la lista correspondiente a la instancia de ContainerRN segun tiempo de entrada a escena
-    print(listJson)
+    #print(listJson)
     def takeInitPos(elem):
         return datetime.strptime(elem[atribute],'%Y-%m-%d %H:%M:%S.%f').time()
     # end function
     listJson.sort(key=takeInitPos)
-    print("#################################### Todos ordenados ######################################################")
-    for obj in listJson:
-    # recorrido de todos los json ordenados por fecha de forma ascendente
-        print(obj['init'])
+    #print("#################################### Todos ordenados ######################################################")
+    """
+    if cosa == 'todos los blobs':
+        for obj in listJson:
+        # recorrido de todos los json ordenados por fecha de forma ascendente
+            print(obj[atribute])
+    """
 # end function
 
 def readAndAddJson(objContain, folderJson):
@@ -378,12 +396,13 @@ def readAndAddJson(objContain, folderJson):
             findedJson=json.loads(fileJson.read())
             # llamado al metodo para que ordene la lista de blobs por el atributo de time de forma ascendente
             blobs=json.loads(findedJson['blobs'])
-            print(list(blobs[0]).)
-
+            #print(list(blobs[0]))
 
             #(blobs.encode("utf-8").decode("unicode-escape").encode("latin-1").decode("utf-8"))
 
             sortJsonList(blobs,'time')
+            findedJson['blobs']=blobs
+            #print(findedJson['blobs']," el finded json con sus blobs ordenados")
             objContain.jsObj.append(findedJson)
            # print(blobs)
         # end with
@@ -423,6 +442,7 @@ def main():
     #runAlgAis(args.dirA , aisContain, args.um, args.timeDetAis, args.dirStA)
     #runAlgYolo(args.dirY, args.dirStY, yoloContain, args.video)
     readAndSortJsons(args.dirStA, aisContain)
+    findingBlob('2018-8-5 17:8:37.207',aisContain)
 # end main
 
 if __name__ == "__main__":
