@@ -341,17 +341,60 @@ def setBatFileYolo(folderRunBat, folderStore, folderVideo):
 
 #######################################################################################################################
 #para procesar los blobs apartir de una fecha especifica
+def obtainingCoord(widthImage,heightImage,centroidBlob,widthBlob,heightBlob):
+# seria una funcion para pasar de los valores porcentuales de las coordenadas y las medidas del objeto a la escala en la
+# imagen original (o frame en este caso de videos)
+    centroidBlob['x']=widthImage*centroidBlob['x']
+    centroidBlob['y'] = heightImage * centroidBlob['y']
+    heightBlob=heightImage * heightBlob
+    widthBlob=widthImage * widthBlob
+# end function
+
+def matchingBlob(blob,centroidGT,widthGT,heightGT):
+# esto saca la intersection over union entre las coordenadas del gt y el blob que se detecta
+    obtainingCoord(800,480,centroidGT,widthGT,heightGT)
+    blob['centroid'] = json.loads(blob['centroid'])
+    obtainingCoord(800, 480, blob['centroid'], blob['width'], blob['height'])
+    # determine the (x,y)-coordinates of the intersection rectangle
+    print(blob['centroid']['x'])
+    xB = max(centroidGT['x'],blob['centroid']['x'])
+    yB = max(centroidGT['y'],blob['centroid']['y'])
+    xA = min(widthGT,blob['width'])
+    yA = min(heightGT,blob['height'])
+
+    #compute the area of intersection rectangle
+    interArea = max(0, xB - xA + 1) * max(0, yB - yA + 1)
+
+    boxAArea = float(widthGT - centroidGT['x']) * float(heightGT - centroidGT['y'] + 1)
+    boxBArea = float(blob['width'] - blob['centroid']['x']) * float(blob['height'] - blob['centroid']['y'] + 1)
+
+    iou = interArea / float(boxAArea + boxBArea - interArea)
+
+###############calcula overlap, ignora lo anterior
+    return blob['centroid']['x'] <= centroidGT['x']+widthGT and blob['centroid']['y'] <= centroidGT['y']+heightGT and blob['centroid']['x'] + blob['width'] \
+           >= centroidGT['x'] and blob['centroid']['y'] + blob['height'] >= centroidGT['y']
+
+    #print(iou)
+# end function
+
 def findingBlob(time,centroid,width,height,objContain):
     # args:
     #   time: tiempo que se quiere analizar
     #   objContain: instancia de la clase ContainerRN, que posee el atributo jsObj con todos los objetos json detectados
     #       por el algoritmo AIS o YOLO segun corresponda todos los json que tiene estan ordenados por el tiempo de
     #       inicio a escena y cada blob, de cada uno, estan ordenados ascendentemente por tiempo de deteccion tambien
+    time=datetime.strptime(time,'%Y-%m-%d %H:%M:%S.%f').time()
     for tb in objContain.jsObj:
-        if datetime.strptime(tb['finish'],'%Y-%m-%d %H:%M:%S.%f').time() >= datetime.strptime(time,'%Y-%m-%d %H:%M:%S.%f').time():
+        if datetime.strptime(tb['finish'],'%Y-%m-%d %H:%M:%S.%f').time() >= time and datetime.strptime(tb['init'],'%Y-%m-%d %H:%M:%S.%f').time() <= time:
             for blob in tb['blobs']:
-                if datetime.strptime(blob['time'],'%Y-%m-%d %H:%M:%S.%f').time() == datetime.strptime(time,'%Y-%m-%d %H:%M:%S.%f').time():
+                if datetime.strptime(blob['time'],'%Y-%m-%d %H:%M:%S.%f').time() == time:
                     print(blob,"encontro el blob que matchea con el tiempo")
+                    print(matchingBlob(blob,centroid,width,height))
+                # end if
+            # end for
+        # end if
+    # end for
+# end function
 #######################################################################################################################
 
 #######################################################################################################################
@@ -442,7 +485,7 @@ def main():
     #runAlgAis(args.dirA , aisContain, args.um, args.timeDetAis, args.dirStA)
     #runAlgYolo(args.dirY, args.dirStY, yoloContain, args.video)
     readAndSortJsons(args.dirStA, aisContain)
-    findingBlob('2018-8-5 17:8:37.207',aisContain)
+    findingBlob('2018-8-5 17:8:37.207',{"x":84.750000,"y":27.708334},3.375,13.75,aisContain)
 # end main
 
 if __name__ == "__main__":
