@@ -352,11 +352,13 @@ def obtainingCoord(widthImage,heightImage,centroidBlob,widthBlob,heightBlob):
 
 def matchingBlob(blob,centroidGT,widthGT,heightGT):
 # esto saca la intersection over union entre las coordenadas del gt y el blob que se detecta
-    obtainingCoord(800,480,centroidGT,widthGT,heightGT)
-    blob['centroid'] = json.loads(blob['centroid'])
-    obtainingCoord(800, 480, blob['centroid'], blob['width'], blob['height'])
+    #obtainingCoord(800,480,centroidGT,widthGT,heightGT)
+    if isinstance(blob['centroid'],str):
+        blob['centroid'] = json.loads(blob['centroid'])
+    #obtainingCoord(800, 480, blob['centroid'], blob['width'], blob['height'])
     # determine the (x,y)-coordinates of the intersection rectangle
     print(blob['centroid']['x'])
+    """
     xB = max(centroidGT['x'],blob['centroid']['x'])
     yB = max(centroidGT['y'],blob['centroid']['y'])
     xA = min(widthGT,blob['width'])
@@ -369,7 +371,7 @@ def matchingBlob(blob,centroidGT,widthGT,heightGT):
     boxBArea = float(blob['width'] - blob['centroid']['x']) * float(blob['height'] - blob['centroid']['y'] + 1)
 
     iou = interArea / float(boxAArea + boxBArea - interArea)
-
+    """
 ###############calcula overlap, ignora lo anterior
     return blob['centroid']['x'] <= centroidGT['x']+widthGT and blob['centroid']['y'] <= centroidGT['y']+heightGT and blob['centroid']['x'] + blob['width'] \
            >= centroidGT['x'] and blob['centroid']['y'] + blob['height'] >= centroidGT['y']
@@ -395,40 +397,25 @@ def findingBlob(time,centroid,width,height,objContain):
         # end if
     # end for
 # end function
+
+def readAndMatch(dirJsons, objContain, aisContain):
+    readAndSortJsons(dirJsons,objContain)
+    for tb in objContain.jsObj:
+        for blob in tb['blobs']:
+            blob['centroid'] = json.loads(blob['centroid'])
+            findingBlob(blob['time'],blob['centroid'],blob['width'],blob['height'],aisContain)
+
 #######################################################################################################################
 
 #######################################################################################################################
 # leer los json el directorio que contiene todos y cada uno por vez
 def sortJsonList(listJson, atribute):
-    """
-    initTime=datetime.strptime(jsObj['init'],'%Y-%m-%d %H:%M:%S.%f').time()
-    finishTime=datetime.strptime(jsObj['finish'],'%Y-%m-%d %H:%M:%S.%f').time()
-    #insertar ordenado en objContain.jsObj() por time
-    if objContain.jsObj:
-    # si la lista de json no esta vacia
-        for obj in objContain.jsObj:
-        # recorre toda la lista de objetos json ya ubicados y añade el nuevo de forma ordenada ascendentemente
-            initObj=(obj['init'], '%Y-%m-%d %H:%M:%S.%f').time()
-            if initTime.__le__(initObj):
-                print(initTime, "-", finishTime)
-    """
-    #for obj in objContain.jsObj:
-    # recorrido de todos los json desordenados por fecha
-    #    print("Todos desordenados")
-    #    print(obj['init'])
-    # funcion y metodo de ordenamiento, para ordenar todos los json ubicados en la lista correspondiente a la instancia de ContainerRN segun tiempo de entrada a escena
     #print(listJson)
     def takeInitPos(elem):
         return datetime.strptime(elem[atribute],'%Y-%m-%d %H:%M:%S.%f').time()
     # end function
     listJson.sort(key=takeInitPos)
     #print("#################################### Todos ordenados ######################################################")
-    """
-    if cosa == 'todos los blobs':
-        for obj in listJson:
-        # recorrido de todos los json ordenados por fecha de forma ascendente
-            print(obj[atribute])
-    """
 # end function
 
 def readAndAddJson(objContain, folderJson):
@@ -439,15 +426,9 @@ def readAndAddJson(objContain, folderJson):
             findedJson=json.loads(fileJson.read())
             # llamado al metodo para que ordene la lista de blobs por el atributo de time de forma ascendente
             blobs=json.loads(findedJson['blobs'])
-            #print(list(blobs[0]))
-
-            #(blobs.encode("utf-8").decode("unicode-escape").encode("latin-1").decode("utf-8"))
-
             sortJsonList(blobs,'time')
             findedJson['blobs']=blobs
-            #print(findedJson['blobs']," el finded json con sus blobs ordenados")
             objContain.jsObj.append(findedJson)
-           # print(blobs)
         # end with
     # end if
 # end function
@@ -477,15 +458,18 @@ def main():
     parser.add_argument('-video', default='F://YOLO//Prueba_V1//2019-08-05_16-09-46.mp4', type=str)
     parser.add_argument('-timeDetAis', default='F://YOLO//Prueba_V1//datos.txt', type=str)
     parser.add_argument('-um', default=0.85,type=float)
+    parser.add_argument('-gtruth',default='F://YOLO//Prueba_V1//2018-08-05//',type=str)
     args = parser.parse_args()
     ###################################################################################################################
     #paramYolo=['D:\YOLO_CL\yoloApps.exe', 'detect', '-M', '5',  YOLO_CONFIG, YOLO_WEIGHTS, '-cnn', '-v',  args.vIn, '-media', args.dirStY,  '-MB', '2100',  '-i', '0',  '-w', '30', '-t', '0',  '-schedule',  '-knn']
     aisContain = ContainerRN()
     yoloContain = ContainerRN()
+    gtruthContain = ContainerRN()
     #runAlgAis(args.dirA , aisContain, args.um, args.timeDetAis, args.dirStA)
     #runAlgYolo(args.dirY, args.dirStY, yoloContain, args.video)
     readAndSortJsons(args.dirStA, aisContain)
-    findingBlob('2018-8-5 17:8:37.207',{"x":84.750000,"y":27.708334},3.375,13.75,aisContain)
+    readAndMatch(args.dirStA, gtruthContain, aisContain)
+    #findingBlob('2018-8-5 17:8:37.207',{"x":84.750000,"y":27.708334},1.375,2.75,aisContain)
 # end main
 
 if __name__ == "__main__":
