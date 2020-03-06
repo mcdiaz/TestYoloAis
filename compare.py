@@ -142,11 +142,9 @@ def runAlgAis(dirRunA,aisContain, threshold, folderData, folderStAis):
     loadLabels(resultPrint)
     # se llama al metodo que procesa los primeros caracteres desde el primer [ hasta el proximo ] para cargar los labels
     # correspondientes a las clasificaciones que se estudiaran
-    # se salta todos los caracteres hasta ']'
-    resultPrint = resultPrint[int(resultPrint.find(']')) + 1:int(len(resultPrint))]
+    # se salta todos los caracteres hasta ']' y
     # se separa el string por ';' en elementos de un arreglo
-    resultArray=resultPrint.split(";")
-    resultArray.remove("")
+    resultArray=resultPrint[int(resultPrint.find(']')) + 1:int(len(resultPrint))].split(";").remove("")
     # Se recorre el resto del string pasado por ais para obtener la clasificacion con su precision de cada objeto
     loadAis(resultArray, aisContain, threshold, folderData)
     #readAndSortJsons(folderStAis, aisContain)
@@ -358,20 +356,6 @@ def matchingBlob(blob,centroidGT,widthGT,heightGT):
     #obtainingCoord(800, 480, blob['centroid'], blob['width'], blob['height'])
     # determine the (x,y)-coordinates of the intersection rectangle
     print(blob['centroid']['x'])
-    """
-    xB = max(centroidGT['x'],blob['centroid']['x'])
-    yB = max(centroidGT['y'],blob['centroid']['y'])
-    xA = min(widthGT,blob['width'])
-    yA = min(heightGT,blob['height'])
-
-    #compute the area of intersection rectangle
-    interArea = max(0, xB - xA + 1) * max(0, yB - yA + 1)
-
-    boxAArea = float(widthGT - centroidGT['x']) * float(heightGT - centroidGT['y'] + 1)
-    boxBArea = float(blob['width'] - blob['centroid']['x']) * float(blob['height'] - blob['centroid']['y'] + 1)
-
-    iou = interArea / float(boxAArea + boxBArea - interArea)
-    """
 ###############calcula overlap, ignora lo anterior
     return blob['centroid']['x'] <= centroidGT['x']+widthGT and blob['centroid']['y'] <= centroidGT['y']+heightGT and blob['centroid']['x'] + blob['width'] \
            >= centroidGT['x'] and blob['centroid']['y'] + blob['height'] >= centroidGT['y']
@@ -398,12 +382,20 @@ def findingBlob(time,centroid,width,height,objContain):
     # end for
 # end function
 
-def readAndMatch(dirJsons, objContain, aisContain):
-    readAndSortJsons(dirJsons,objContain)
-    for tb in objContain.jsObj:
+def readAndMatch(dirJsons, gtruthContain, aisContain):
+    #funcion que procesa todos los json en una ubicacion y compara cada blob con los blob ubicados en la instancia de
+    #ContainerRN correspondiente a los blobs encontrados por cada algoritmo de deteccion y clasificacion
+    #Primero llama a la funcion que lee y ordena los json y los ubica en la instancia gtruthContain
+    readAndSortJsons(dirJsons,gtruthContain)
+    for tb in gtruthContain.jsObj:
         for blob in tb['blobs']:
+            #por cada blob encontrado del ground truth, lo compara con todos los blob detectados y clasificados con cada
+            #algoritmo/rn
             blob['centroid'] = json.loads(blob['centroid'])
             findingBlob(blob['time'],blob['centroid'],blob['width'],blob['height'],aisContain)
+        # end for
+    # end for
+# end function
 
 #######################################################################################################################
 
@@ -467,7 +459,8 @@ def main():
     gtruthContain = ContainerRN()
     #runAlgAis(args.dirA , aisContain, args.um, args.timeDetAis, args.dirStA)
     #runAlgYolo(args.dirY, args.dirStY, yoloContain, args.video)
-    readAndSortJsons(args.dirStA, aisContain)
+    readAndSortJsons(args.dirStA, aisContain)#esto tendria que estar dentro de la funcion de runAlgAIS
+    #readAndSortJsons(args.dirStY,yoloContain)#esto tendria que estar dentro de la funcion de runAlgYolo
     readAndMatch(args.dirStA, gtruthContain, aisContain)
     #findingBlob('2018-8-5 17:8:37.207',{"x":84.750000,"y":27.708334},1.375,2.75,aisContain)
 # end main
