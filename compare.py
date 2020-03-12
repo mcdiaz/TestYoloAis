@@ -236,7 +236,8 @@ def runAlgYolo(dirRunYolo, dirStoreYolo,yoloContain, dirVideoIn):
     readAndSortJsons(dirStoreYolo, yoloContain)
 # end function
 
-def printValues(yoloContain, aisContain):
+#######################################################################################################################
+def printValues1(yoloContain, aisContain):
     # Este metodo imprime una tabla de la forma Yolo | AIS | Human
     # Volcando los datos de la cantidad de objetos detectados y clasificados
     # args:
@@ -297,6 +298,11 @@ def printValues(yoloContain, aisContain):
     print("{0}{1:^10s}{0}{0}{2:^10d}{0}{0}{3:^10d}{0}".format("|", "Total", yoloContain.amount, aisContain.amount))
     print("{0}{1:^10s}{0}{0}{2:^10f}{0}{0}{3:^10f}{0}".format("|", "Tiempo", yoloContain.finalTime, aisContain.finalTime))
     """
+# end function
+
+#def printValues2(yoloContain, aisContain, gTruthContain):
+    # Este metodo imprime la tabla de comparacion con mas precision, que tiene en cuenta la cantidad de objetos
+    # detectados en el ground truth por cada frame del video
 # end function
 
 ####################################################################################################################################
