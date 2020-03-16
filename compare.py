@@ -369,7 +369,9 @@ def matchingBlob(blob,centroidGT,widthGT,heightGT):
     #print(iou)
 # end function
 
-def findingBlob(time,centroid,width,height,objContain):
+def findingBlob(time,centroid,width,height,objContain,countMatch):
+    # esta funcion chequea matching entre alguno de los blob de los tb asociados a la instancia de ContainerRN con el tiempo
+    # del blob a analizar del gtruth
     # args:
     #   time: tiempo que se quiere analizar
     #   objContain: instancia de la clase ContainerRN, que posee el atributo jsObj con todos los objetos json detectados
@@ -380,12 +382,14 @@ def findingBlob(time,centroid,width,height,objContain):
         if datetime.strptime(tb['finish'],'%Y-%m-%d %H:%M:%S.%f').time() >= time and datetime.strptime(tb['init'],'%Y-%m-%d %H:%M:%S.%f').time() <= time:
             for blob in tb['blobs']:
                 if datetime.strptime(blob['time'],'%Y-%m-%d %H:%M:%S.%f').time() == time:
-                    print(blob,"encontro el blob que matchea con el tiempo")
-                    print(matchingBlob(blob,centroid,width,height))
+                    countMatch += 1 #suma en uno los blobs que matchean en tiempo
+                    #print(blob,"encontro el blob que matchea con el tiempo")
+                    #print(matchingBlob(blob,centroid,width,height))#Este metodo devuelve true o false si coinsiden(o no) en espacio
                 # end if
             # end for
         # end if
     # end for
+    # end if
 # end function
 
 def readAndMatch(dirJsons, gtruthContain, aisContain):
@@ -393,14 +397,17 @@ def readAndMatch(dirJsons, gtruthContain, aisContain):
     #ContainerRN correspondiente a los blobs encontrados por cada algoritmo de deteccion y clasificacion
     #Primero llama a la funcion que lee y ordena los json y los ubica en la instancia gtruthContain
     readAndSortJsons(dirJsons,gtruthContain)
+    countMatch=0
     for tb in gtruthContain.jsObj:
         for blob in tb['blobs']:
             #por cada blob encontrado del ground truth, lo compara con todos los blob detectados y clasificados con cada
             #algoritmo/rn
             blob['centroid'] = json.loads(blob['centroid'])
-            findingBlob(blob['time'],blob['centroid'],blob['width'],blob['height'],aisContain)
+            findingBlob(blob['time'],blob['centroid'],blob['width'],blob['height'],aisContain,countMatch)
         # end for
     # end for
+    print("Cantidad matching en tiempo:",countMatch)
+    print("Cantidad no matching en tiempo:",gtruthContain.jsObj.__len__() - countMatch)
 # end function
 
 #######################################################################################################################
@@ -417,9 +424,9 @@ def sortJsonList(listJson, atribute):
 # end function
 
 def readAndAddJson(objContain, folderJson):
-    # lee los json ubicados en la direccion de folderJson, los procesa y llama al metodo addSort para guardarlos ordenados en la intancia objContain de ContainerRN
+    # lee los json ubicados en la direccion de folderJson, los procesa y llama al metodo addSort para guardarlos
+    # ordenados en la intancia objContain de ContainerRN
     if str(folderJson).endswith('.json'):
-        findedJson=json
         with open(folderJson,'r') as fileJson:
             findedJson=json.loads(fileJson.read())
             # llamado al metodo para que ordene la lista de blobs por el atributo de time de forma ascendente
@@ -467,7 +474,8 @@ def main():
     #runAlgYolo(args.dirY, args.dirStY, yoloContain, args.video)
     readAndSortJsons(args.dirStA, aisContain)#esto tendria que estar dentro de la funcion de runAlgAIS
     #readAndSortJsons(args.dirStY,yoloContain)#esto tendria que estar dentro de la funcion de runAlgYolo
-    readAndMatch(args.dirStA, gtruthContain, aisContain)
+    readAndMatch(args.gtruth, gtruthContain, aisContain)
+    #readAndMatch(args.gtruth, gtruthContain, yoloContain)
     #findingBlob('2018-8-5 17:8:37.207',{"x":84.750000,"y":27.708334},1.375,2.75,aisContain)
 # end main
 
