@@ -475,6 +475,7 @@ def main():
     readAndSortJsons(args.dirStA, aisContain)#esto tendria que estar dentro de la funcion de runAlgAIS
     #readAndSortJsons(args.dirStY,yoloContain)#esto tendria que estar dentro de la funcion de runAlgYolo
     readAndMatch(args.gtruth, gtruthContain, aisContain)
+    print("holi")
     #readAndMatch(args.gtruth, gtruthContain, yoloContain)
     #findingBlob('2018-8-5 17:8:37.207',{"x":84.750000,"y":27.708334},1.375,2.75,aisContain)
 # end main
