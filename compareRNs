@@ -1,0 +1,30 @@
+import os
+import subprocess
+import csv
+import argparse
+
+PATH_SCRIPT_NEURAL_NET_1="F:\YOLO\TestYoloAis\scriptR1.py"
+PATH_SCRIPT_NEURAL_NET_2="F:\YOLO\TestYoloAis\scriptR2.py"
+
+def runNeuralNet1(path_img):
+    sub = subprocess.Popen([r'' + "F:\YOLO\Python36\python.exe " + PATH_SCRIPT_NEURAL_NET_1 + "--img " + path_img],
+                           stdout=subprocess.PIPE, shell=False)
+#end function
+
+def runNeuralNet2(path_img):
+    sub = subprocess.Popen([r'' + "F:\YOLO\Python36\python.exe " + PATH_SCRIPT_NEURAL_NET_2 + "--img " + path_img],
+                           stdout=subprocess.PIPE, shell=False)
+#end function
+
+def compare():
+    # aca itera por las carpetas del gt en d\leo test 1\ y con cada path de cada img de cada carpeta, invoca a
+    # runNeuralNet 1 y 2 y va dando las salidas en una tablita de formato csv
+    print("Hola, tendria que comparar rns")
+# end function
+
+def main():
+    print("Hola, soy el main")
+# end main
+
+if __name__ == "__main__":
+    main()
