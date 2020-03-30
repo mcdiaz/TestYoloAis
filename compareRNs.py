@@ -87,19 +87,25 @@ def compare(folder):
     # runNeuralNet 1 y 2 y va dando las salidas en una tablita de formato csv
     result = ""
     #sub=runNeuralNet("", "D://CARO//Leo_Test_1//60000//", "retrained_graph.pb", "D://CARO//Leo_Test_1//test_images//")
-    setBatFileAis(PATH_RUN_BAT_NEURAL_NET, "D://CARO//Leo_Test_1//test_images//animal//0_fa2b4f86-6908-493e-92f3-a187717a9283.jpg", "D://CARO//Leo_Test_1//60000//", "D:\\CARO\\Leo_Test_1\\test_images\\", "retrained_graph.pb")
-    sub1 = subprocess.Popen([r'' + PATH_RUN_BAT_NEURAL_NET], stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=False)
+    setBatFileAis(PATH_RUN_BAT_NEURAL_NET, "D://CARO//Leo_Test_1//test_images//animal//0_fa2b4f86-6908-493e-92f3-a187717a9283.jpg",
+                  "D://CARO//Leo_Test_1//60000//", "D:\\CARO\\Leo_Test_1\\test_images\\", "retrained_graph.pb")
+    sub1 = subprocess.Popen([r'' + PATH_RUN_BAT_NEURAL_NET], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+        #no es necesario shell=True porque ejecuto un batch file y no interactuo directamente con la terminal
     stdin = io.TextIOWrapper(
         sub1.stdin,
         encoding='utf-8',
         line_buffering=True,  # send data on newline
     )
+    stdout = io.TextIOWrapper(
+        sub1.stdout,
+        encoding='utf-8',
+    )
     # recorre todos los directorios y files que se encuentren en una ruta especifica
     print("Hola, tendria que comparar rns")
     for root, dirs, files in os.walk(folder):
         # saltea el primer directorio, que es el directorio que estoy recorriendo
-        out=str(sub1.stdout.readline().decode("utf-8"))
-        if root != folder and out.__eq__("waiting\r\n"):
+        out=str(stdout.readline())
+        if root != folder and out.__eq__("waiting\n"):
             # recorre todos los archivos contenidos en files
             for name in files:
                 # encuentra una imagen"
@@ -107,9 +113,9 @@ def compare(folder):
                     folderImage=root + "\\" + name
                     print(folderImage)
                     stdin.write('"'+folderImage+'"')
-                    stdin.flush()
                     #wrAndReadRN(sub1.stdout.readline())
-                    output = sub1.stdout.readlines().decode('utf-8')
+                    #sub1.wait(timeout=1000)
+                    output = str(stdout.readline())
                     print(output.rstrip())
                     #sub1.stdout.flush()
                     #runNeuralNet(folderImage,pathRN,"retrained_graph.pb","D://CARO//Leo_Test_1//test_images//")
