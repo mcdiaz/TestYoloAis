@@ -6,8 +6,14 @@ import csv
 import argparse
 
 PATH_RUN_BAT_NEURAL_NET="F://YOLO//TestYoloAis//run-ScriptAis-RN1y2.bat"
+PATH_TEST_IMAGES="D:\\CARO\\Leo_Test_1\\test_images\\"
 LABELS_R1=[]
 LABELS_R2=[]
+#Guardan en diccionario la cantidad de clasificaciones de los labels correspondientes a r1 y a r2
+DICT_R1={}
+DICT_R2={}
+SUBPROCESS_R1=subprocess
+SUBPROCESS_R2=subprocess
 
 def loadLabels(listLabels,labels):
     # procesar la salida del script de ais
@@ -82,25 +88,43 @@ def runNeuralNet2(path_img,pathRN,pathTestImg,nameRN):
     #resultArray = resultPrint[int(resultPrint.find(']')) + 1:int(len(resultPrint))].split(";").remove("")
 #end function
 """
-def compare(folder):
+def initSubprocess(pathFolderRN,pathRunRN,RN):
+    setBatFileAis(PATH_RUN_BAT_NEURAL_NET, "1", pathFolderRN, PATH_TEST_IMAGES,
+                  pathRunRN)
+    stdin=()
+    stdout=()
+    if RN.__eq__(1):
+        SUBPROCESS_R1 = subprocess.Popen([r'' + PATH_RUN_BAT_NEURAL_NET],shell=True, stdin=subprocess.PIPE,
+                                         stdout=subprocess.PIPE)
+        stdin = io.TextIOWrapper(
+            SUBPROCESS_R1.stdin,
+            encoding='utf-8',
+            line_buffering=True,  # send data on newline
+        )
+        stdout = io.TextIOWrapper(
+            SUBPROCESS_R1.stdout,
+            encoding='utf-8',
+        )
+    else:
+        SUBPROCESS_R2 = subprocess.Popen([r'' + PATH_RUN_BAT_NEURAL_NET], shell=True, stdin=subprocess.PIPE,
+                                         stdout=subprocess.PIPE)
+        stdin = io.TextIOWrapper(
+            SUBPROCESS_R2.stdin,
+            encoding='utf-8',
+            line_buffering=True,  # send data on newline
+        )
+        stdout = io.TextIOWrapper(
+            SUBPROCESS_R2.stdout,
+            encoding='utf-8',
+        )
+    return stdin,stdout
+# end function
+
+def compare(stdin,stdout):
     # aca itera por las carpetas del gt en d\leo test 1\ y con cada path de cada img de cada carpeta, invoca a
     # runNeuralNet 1 y 2 y va dando las salidas en una tablita de formato csv
     result = ""
     #sub=runNeuralNet("", "D://CARO//Leo_Test_1//60000//", "retrained_graph.pb", "D://CARO//Leo_Test_1//test_images//")
-    setBatFileAis(PATH_RUN_BAT_NEURAL_NET, "D://CARO//Leo_Test_1//test_images//animal//0_fa2b4f86-6908-493e-92f3-a187717a9283.jpg",
-                  "D://CARO//Leo_Test_1//60000//", "D:\\CARO\\Leo_Test_1\\test_images\\", "retrained_graph.pb")
-    sub1 = subprocess.Popen([r'' + PATH_RUN_BAT_NEURAL_NET],shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
-        #no es necesario shell=True porque ejecuto un batch file y no interactuo directamente con la terminal
-    stdin = io.TextIOWrapper(
-        sub1.stdin,
-        encoding='utf-8',
-        line_buffering=True,  # send data on newline
-    )
-    stdout = io.TextIOWrapper(
-        sub1.stdout,
-        encoding='utf-8',
-
-    )
     #Antes de iterar por directorios y files, me aseguro que esté posicionada en la linea proxima a que la herramienta ais "lea la url",
     out = ""
     while out.__ne__("waiting\n"):
@@ -109,9 +133,9 @@ def compare(folder):
 
     # recorre todos los directorios y files que se encuentren en una ruta especifica
     print("Hola, tendria que comparar rns")
-    for root, dirs, files in os.walk(folder):
+    for root, dirs, files in os.walk(PATH_TEST_IMAGES):
         # saltea el primer directorio, que es el directorio que estoy recorriendo
-        if root != folder and out.__eq__("waiting\n"):
+        if root != PATH_TEST_IMAGES and out.__eq__("waiting\n"):
             # recorre todos los archivos contenidos en files
             for name in files:
                 # encuentra una imagen"
@@ -139,7 +163,11 @@ def compare(folder):
 # end function
 
 def main():
-    compare("D:\\CARO\\Leo_Test_1\\test_images\\")
+    #Primero para inicializar R1 y agregarlo al diccionario correspondiente
+    stdin1,stdout1=initSubprocess("D://CARO//Leo_Test_1//60000//","retrained_graph.pb",1)
+    compare(stdin1,stdout1)
+    stdin2,stdout2=initSubprocess("D://CARO//Leo_Test_1//124000//", "retrained_graph_v1.pb",2)
+    compare(stdin2,stdout2)
     print("Hola, soy el main")
 # end main
 
