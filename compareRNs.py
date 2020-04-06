@@ -89,7 +89,7 @@ def compare(folder):
     #sub=runNeuralNet("", "D://CARO//Leo_Test_1//60000//", "retrained_graph.pb", "D://CARO//Leo_Test_1//test_images//")
     setBatFileAis(PATH_RUN_BAT_NEURAL_NET, "D://CARO//Leo_Test_1//test_images//animal//0_fa2b4f86-6908-493e-92f3-a187717a9283.jpg",
                   "D://CARO//Leo_Test_1//60000//", "D:\\CARO\\Leo_Test_1\\test_images\\", "retrained_graph.pb")
-    sub1 = subprocess.Popen([r'' + PATH_RUN_BAT_NEURAL_NET], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+    sub1 = subprocess.Popen([r'' + PATH_RUN_BAT_NEURAL_NET],shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
         #no es necesario shell=True porque ejecuto un batch file y no interactuo directamente con la terminal
     stdin = io.TextIOWrapper(
         sub1.stdin,
@@ -99,10 +99,16 @@ def compare(folder):
     stdout = io.TextIOWrapper(
         sub1.stdout,
         encoding='utf-8',
+
     )
+    #Antes de iterar por directorios y files, me aseguro que esté posicionada en la linea proxima a que la herramienta ais "lea la url",
+    
+
     # recorre todos los directorios y files que se encuentren en una ruta especifica
     print("Hola, tendria que comparar rns")
     for root, dirs, files in os.walk(folder):
+
+
         # saltea el primer directorio, que es el directorio que estoy recorriendo
         out=str(stdout.readline())
         if root != folder and out.__eq__("waiting\n"):
@@ -112,10 +118,13 @@ def compare(folder):
                 if str(name).endswith(".jpg") or str(name).endswith(".jpeg"):
                     folderImage=root + "\\" + name
                     print(folderImage)
-                    stdin.write('"'+folderImage+'"')
+
+                    line = '{}\n'.format(folderImage)#es importante que este definido el formato del salto de linea, porque eso tambien genera que la herramienta no lo tome como url de imagen, porque no terminaria en .jpg o .jpeg
+
+                    stdin.write(line)
+                    stdin.flush()
                     #wrAndReadRN(sub1.stdout.readline())
-                    #sub1.wait(timeout=1000)
-                    output = str(stdout.readline())
+                    output = stdout.readline()
                     print(output.rstrip())
                     #sub1.stdout.flush()
                     #runNeuralNet(folderImage,pathRN,"retrained_graph.pb","D://CARO//Leo_Test_1//test_images//")
