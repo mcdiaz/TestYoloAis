@@ -102,15 +102,15 @@ def compare(folder):
 
     )
     #Antes de iterar por directorios y files, me aseguro que esté posicionada en la linea proxima a que la herramienta ais "lea la url",
-    
+    out = ""
+    while out.__ne__("waiting\n"):
+        out=str(stdout.readline())
+    #end while
 
     # recorre todos los directorios y files que se encuentren en una ruta especifica
     print("Hola, tendria que comparar rns")
     for root, dirs, files in os.walk(folder):
-
-
         # saltea el primer directorio, que es el directorio que estoy recorriendo
-        out=str(stdout.readline())
         if root != folder and out.__eq__("waiting\n"):
             # recorre todos los archivos contenidos en files
             for name in files:
@@ -118,24 +118,24 @@ def compare(folder):
                 if str(name).endswith(".jpg") or str(name).endswith(".jpeg"):
                     folderImage=root + "\\" + name
                     print(folderImage)
-
                     line = '{}\n'.format(folderImage)#es importante que este definido el formato del salto de linea, porque eso tambien genera que la herramienta no lo tome como url de imagen, porque no terminaria en .jpg o .jpeg
-
                     stdin.write(line)
                     stdin.flush()
                     #wrAndReadRN(sub1.stdout.readline())
                     output = stdout.readline()
                     print(output.rstrip())
+                    waiting= stdout.readline() #waiting que espera la proxima escritura
                     #sub1.stdout.flush()
                     #runNeuralNet(folderImage,pathRN,"retrained_graph.pb","D://CARO//Leo_Test_1//test_images//")
                     #runNeuralNet2(folderImage,"D://CARO//Leo_Test_1//1240000//","retrained_graph_v1.pb","D://CARO//Leo_Test_1//test_images//")
                 # end if
             # end for
-            sub1.stdin.write("close")
-            remainder = sub1.communicate()[0].decode('utf-8')
-            print(remainder)
+            #remainder = sub1.communicate()[0].decode('utf-8')
+            #print(remainder)
         # end if
     # end for
+    line = '{}\n'.format("close")
+    stdin.write(line)
 # end function
 
 def main():
