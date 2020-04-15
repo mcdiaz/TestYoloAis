@@ -6,8 +6,9 @@ import csv
 import argparse
 
 PATH_RUN_BAT_NEURAL_NET="F://YOLO//TestYoloAis//run-ScriptAis-RN1y2.bat"
-PATH_TEST_IMAGES="D:\\CARO\\Leo_Test_1\\test_images\\"
-LABELS=list()
+PATH_TEST_IMAGES="D://CARO//Leo_Test_1//test_images//human//"
+LABELS_RN6=list()
+LABELS_RN124=list()
 #Guardan en diccionario la cantidad de clasificaciones de los labels correspondientes a r1 y a r2
 DICT_GT=dict()
 DICT_RN6=dict()
@@ -16,8 +17,9 @@ SUBPROCESS_R1=subprocess
 SUBPROCESS_R2=subprocess
 THRESHOLD_MIN=15.0
 THRESHOLD_MAX=35.0
+LABEL_TEST='human'
 
-def loadLabels(listLabels):
+def loadLabels(listLabels,RN6,RN124):
     # procesar la salida del script de ais
     # primero lee la lista de las etiquetas que utiliza ais y las guarda en una lista propia del programa para luego
     # utilizarla como referencia de las etiquetas que se desea utilizar
@@ -26,11 +28,15 @@ def loadLabels(listLabels):
         if (listLabels[pos] not in {"[", "'", ",", " "}):
             classif += listLabels[pos]
         elif classif != "":
-            LABELS.append(classif)
+            if RN6:
+                LABELS_RN6.append(classif)
+            elif RN124:
+                LABELS_RN124.append(classif)
             classif = ""
         # end if
     # end for
-    print(LABELS)
+    print(LABELS_RN6)
+    print(LABELS_RN124)
 # end function
 
 def setBatFileAis(pathRunBat,pathImg,pathRN,pathTestImg,nameRN):
@@ -40,18 +46,18 @@ def setBatFileAis(pathRunBat,pathImg,pathRN,pathTestImg,nameRN):
         for pos in range(1,len(column)):
             if column[pos-1]=='--im':
                 column[pos]='"'+pathImg+'"'
-                break
+                #break
             # end if
-            if column[pos-1]=='--nameRN':
+            elif column[pos-1]=='--nameRN':
                 column[pos]='"'+nameRN+'"'
-                break
+                #break
             # end if
-            if column[pos-1]=='--pathRN':
-                column[pos]='"'+pathRN+'//"'
-                break
+            elif column[pos-1]=='--pathRN':
+                column[pos]='"'+pathRN+'"'
+                #break
             # end if
-            if column[pos-1]=='--pathTestImg':
-                column[pos]='"'+pathTestImg+'//"'
+            elif column[pos-1]=='--pathTestImg':
+                column[pos]='"'+pathTestImg+'"'
                 break
             # end if
         # end for
@@ -62,6 +68,7 @@ def setBatFileAis(pathRunBat,pathImg,pathRN,pathTestImg,nameRN):
     # end with
 # end function
 
+"""
 def runNeuralNet(path_img,pathRN,pathTestImg,nameRN):
     setBatFileAis(PATH_RUN_BAT_NEURAL_NET,path_img,pathRN,pathTestImg,nameRN)
     sub1 = subprocess.Popen([r''+PATH_RUN_BAT_NEURAL_NET],stdin=subprocess.PIPE,stdout=subprocess.PIPE, shell=False)
@@ -78,7 +85,7 @@ def wrAndReadRN(outputRN):
     #    loadLabels(resultPrint,LABELS_R1)
     #resultArray = resultPrint[int(resultPrint.find(']')) + 1:int(len(resultPrint))].split(";").remove("")
 #end function
-"""
+
 def runNeuralNet2(path_img,pathRN,pathTestImg,nameRN):
     setBatFileAis(PATH_RUN_BAT_NEURAL_NET, path_img,pathRN,pathTestImg,nameRN)
     sub = subprocess.Popen([r''+PATH_RUN_BAT_NEURAL_NET],stdout=subprocess.PIPE, shell=False)
@@ -92,11 +99,11 @@ def runNeuralNet2(path_img,pathRN,pathTestImg,nameRN):
 #end function
 """
 def initSubprocess(pathFolderRN,pathRunRN,RN):
-    setBatFileAis(PATH_RUN_BAT_NEURAL_NET, "1", pathFolderRN, PATH_TEST_IMAGES,
-                  pathRunRN)
     stdin=()
     stdout=()
     if RN.__eq__(1):
+        setBatFileAis(PATH_RUN_BAT_NEURAL_NET, "1", pathFolderRN, PATH_TEST_IMAGES,
+                      pathRunRN)
         SUBPROCESS_R1 = subprocess.Popen([r'' + PATH_RUN_BAT_NEURAL_NET],shell=True, stdin=subprocess.PIPE,
                                          stdout=subprocess.PIPE)
         stdin = io.TextIOWrapper(
@@ -108,7 +115,9 @@ def initSubprocess(pathFolderRN,pathRunRN,RN):
             SUBPROCESS_R1.stdout,
             encoding='utf-8',
         )
-    else:
+    elif RN.__eq__(2):
+        setBatFileAis(PATH_RUN_BAT_NEURAL_NET, "2", pathFolderRN, PATH_TEST_IMAGES,
+                      pathRunRN)
         SUBPROCESS_R2 = subprocess.Popen([r'' + PATH_RUN_BAT_NEURAL_NET], shell=True, stdin=subprocess.PIPE,
                                          stdout=subprocess.PIPE)
         stdin = io.TextIOWrapper(
@@ -170,12 +179,12 @@ def loadDicc(classify, classRN):
         arrclass=classify.split("\\")
         label=arrclass.pop()
         print(label)
-        DICT_GT[label]=(DICT_GT.get(label) or 0) + 1
+        DICT_GT[LABEL_TEST]=(DICT_GT.get(LABEL_TEST) or 0) + 1
     #end if
 
 #end function
 
-def classifyFolder(stdin,stdout,ClassRN,GT):
+def classifyFolder(stdin,stdout,ClassRN,GT,RN6,RN124):
     # aca itera por las carpetas del gt en d\leo test 1\ y con cada path de cada img de cada carpeta, invoca a
     # runNeuralNet 1 y 2 y va dando las salidas en una tablita de formato csv
     #Antes de iterar por directorios y files, me aseguro que esté posicionada en la linea proxima a que la herramienta ais "lea la url",
@@ -183,21 +192,25 @@ def classifyFolder(stdin,stdout,ClassRN,GT):
     while out.__ne__("waiting\n"):
         out=str(stdout.readline())
         print(out)
-        if out.startswith("[") and LABELS.__eq__(False) :
+        if out.startswith("[") and RN6:
             print("loadLabels")
-            loadLabels(out)
+            loadLabels(out,RN6,False)
+        elif out.startswith("[") and RN124:
+            print("loadLabels")
+            loadLabels(out,False,RN124)
         # end if
     #end while
     # recorre todos los directorios y files que se encuentren en una ruta especifica
     print("Hola, tendria que comparar rns")
     for root, dirs, files in os.walk(PATH_TEST_IMAGES):
         # saltea el primer directorio, que es el directorio que estoy recorriendo
-        if root != PATH_TEST_IMAGES and out.__eq__("waiting\n"):
+        if out.__eq__("waiting\n"):
+        #if root != PATH_TEST_IMAGES and out.__eq__("waiting\n"): #forma de chequear con todos los labels
             # recorre todos los archivos contenidos en files
             for name in files:
                 # encuentra una imagen"
                 if str(name).endswith(".jpg") or str(name).endswith(".jpeg"):
-                    folderImage=root + "\\" + name
+                    folderImage=root + "//" + name
                     print(folderImage)
                     line = '{}\n'.format(folderImage)#es importante que este definido el formato del salto de linea, porque eso tambien genera que la herramienta no lo tome como url de imagen, porque no terminaria en .jpg o .jpeg
                     stdin.write(line)
@@ -205,7 +218,7 @@ def classifyFolder(stdin,stdout,ClassRN,GT):
                     #wrAndReadRN(sub1.stdout.readline())
                     output = stdout.readline()
                     print(output.rstrip())
-                    if GT.__ne__(''):
+                    if RN124:
                         loadDicc(root,GT)#metodo que carga el diccionario correspondiente al GT de acuerdo al nombre que figura en el path pasado por parametro
                     loadDicc(classifyImage(folderImage,output,ClassRN),ClassRN)#se le manda el folder(que de ahi se podria verificar la clasificacion real)
                     waiting = stdout.readline()  # waiting que espera la proxima escritura, "lo descarto"
@@ -218,13 +231,13 @@ def classifyFolder(stdin,stdout,ClassRN,GT):
 # end function
 
 def generateResults():
-    with open('resultRNs.csv', 'w') as csvfile:
+    with open(LABEL_TEST+'resultRNs.csv', 'w') as csvfile:
         #rowNames = ['Label','YOLO','AIS','Time_YOLO','Time_AIS']
         rowNames = ['Label', 'GT', 'RN6000', 'RN124000']
         writer = csv.DictWriter(csvfile, fieldnames=rowNames)
         writer.writeheader()
         #writer.writerows([{'Time_YOLO': yoloContain.finalTime, 'Time_AIS': aisContain.finalTime}])
-        for label in LABELS:
+        for label in LABELS_RN124:
             writer.writerows([{'Label': label, 'GT': int(DICT_GT.get(label) or 0),
                                'RN6000': int(DICT_RN6.get(label) or 0),
                                'RN124000': int(DICT_RN124.get(label) or 0)}])
@@ -242,9 +255,9 @@ def generateResults():
 def main():
     #Primero para inicializar R1 y agregarlo al diccionario correspondiente
     stdin1,stdout1=initSubprocess("D://CARO//Leo_Test_1//60000//","retrained_graph.pb",1)
-    classifyFolder(stdin1,stdout1,'RN6000','GT')
+    classifyFolder(stdin1,stdout1,'RN6000','',True,False)
     stdin2,stdout2=initSubprocess("D://CARO//Leo_Test_1//124000//", "retrained_graph_v1.pb",2)
-    classifyFolder(stdin2,stdout2,'RN124000','')
+    classifyFolder(stdin2,stdout2,'RN124000','GT',False,True)
     generateResults()
     print("Hola, soy el main")
 # end main
