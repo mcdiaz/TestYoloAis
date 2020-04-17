@@ -6,7 +6,7 @@ import csv
 import argparse
 
 PATH_RUN_BAT_NEURAL_NET="F://YOLO//TestYoloAis//run-ScriptAis-RN1y2.bat"
-PATH_TEST_IMAGES="D://CARO//Leo_Test_1//test_images//human//"
+PATH_TEST_IMAGES="D://Leo_Test_1//test_images//truck//"
 LABELS_RN6=list()
 LABELS_RN124=list()
 #Guardan en diccionario la cantidad de clasificaciones de los labels correspondientes a r1 y a r2
@@ -17,7 +17,9 @@ SUBPROCESS_R1=subprocess
 SUBPROCESS_R2=subprocess
 THRESHOLD_MIN=15.0
 THRESHOLD_MAX=35.0
-LABEL_TEST='human'
+LABEL_TEST='truck'
+LIST_WRONG_LABEL=list()
+
 
 def loadLabels(listLabels,RN6,RN124):
     # procesar la salida del script de ais
@@ -58,6 +60,7 @@ def setBatFileAis(pathRunBat,pathImg,pathRN,pathTestImg,nameRN):
             # end if
             elif column[pos-1]=='--pathTestImg':
                 column[pos]='"'+pathTestImg+'"'
+                print(pathTestImg)
                 break
             # end if
         # end for
@@ -132,7 +135,7 @@ def initSubprocess(pathFolderRN,pathRunRN,RN):
     return stdin,stdout
 # end function
 
-def classifyImage(folderImage, classify, classRN):
+def classifyImage(folderImage, classify, rn124):
     arrayClassify=classify.strip().replace(";","").split("|")
     label=""
     preciss=0.0
@@ -140,7 +143,12 @@ def classifyImage(folderImage, classify, classRN):
         firstPos = arrayClassify[0].split("_")
         label = firstPos[0]
         preciss = float(firstPos[1])
-    print(arrayClassify)
+        if rn124:
+            arrclass = folderImage.split("//")
+            root=list(arrclass).pop(list(arrclass).__len__()-2) #root se vuelve el anteultimo elemento del arreglo que contiene
+            #los elementos del path del folder, entonces se vuelve la etiqueta original
+            if root.__ne__(label):
+               LIST_WRONG_LABEL.append([folderImage,label,preciss])
 
     """
     #para comparar la precission de los labels
@@ -210,7 +218,7 @@ def classifyFolder(stdin,stdout,ClassRN,GT,RN6,RN124):
             for name in files:
                 # encuentra una imagen"
                 if str(name).endswith(".jpg") or str(name).endswith(".jpeg"):
-                    folderImage=root + "//" + name
+                    folderImage=root + name
                     print(folderImage)
                     line = '{}\n'.format(folderImage)#es importante que este definido el formato del salto de linea, porque eso tambien genera que la herramienta no lo tome como url de imagen, porque no terminaria en .jpg o .jpeg
                     stdin.write(line)
@@ -220,7 +228,7 @@ def classifyFolder(stdin,stdout,ClassRN,GT,RN6,RN124):
                     print(output.rstrip())
                     if RN124:
                         loadDicc(root,GT)#metodo que carga el diccionario correspondiente al GT de acuerdo al nombre que figura en el path pasado por parametro
-                    loadDicc(classifyImage(folderImage,output,ClassRN),ClassRN)#se le manda el folder(que de ahi se podria verificar la clasificacion real)
+                    loadDicc(classifyImage(folderImage,output,RN124),ClassRN)#se le manda el folder(que de ahi se podria verificar la clasificacion real)
                     waiting = stdout.readline()  # waiting que espera la proxima escritura, "lo descarto"
                 # end if
             # end for
@@ -231,10 +239,11 @@ def classifyFolder(stdin,stdout,ClassRN,GT,RN6,RN124):
 # end function
 
 def generateResults():
-    with open(LABEL_TEST+'resultRNs.csv', 'w') as csvfile:
+    with open(LABEL_TEST+'_v1.0_resultRNs.csv', 'w') as csvfile:
         #rowNames = ['Label','YOLO','AIS','Time_YOLO','Time_AIS']
         rowNames = ['Label', 'GT', 'RN6000', 'RN124000']
-        writer = csv.DictWriter(csvfile, fieldnames=rowNames)
+        csv.register_dialect('delimiter',delimiter=';',lineterminator='\n')
+        writer = csv.DictWriter(csvfile, fieldnames=rowNames, dialect='delimiter')
         writer.writeheader()
         #writer.writerows([{'Time_YOLO': yoloContain.finalTime, 'Time_AIS': aisContain.finalTime}])
         for label in LABELS_RN124:
@@ -244,6 +253,9 @@ def generateResults():
             #valorYolo = int(yoloContain.dict.get(label) or 0)
             #valorAis = int(aisContain.dict.get(label) or 0)
             #print("{2}{0:^10s}{2}{2}{1:^10d}{2}{2}{3:^10d}{2}".format(label, valorYolo, "|", valorAis))
+        for pos in LIST_WRONG_LABEL:
+            writer.writerows([{'Label': pos[0], 'GT': pos[1],
+                               'RN6000': pos[2]}])
         #writer.writerows([{'Label': 'Total_time', 'YOLO': yoloContain.finalTime, 'AIS': aisContain.finalTime}])
         #print("{1:^36s}".format("|", "____________________________________"))
         #print("{0}{1:^10s}{0}{0}{2:^10d}{0}{0}{3:^10d}{0}".format("|", "Total", yoloContain.amount, aisContain.amount))
@@ -254,9 +266,9 @@ def generateResults():
 
 def main():
     #Primero para inicializar R1 y agregarlo al diccionario correspondiente
-    stdin1,stdout1=initSubprocess("D://CARO//Leo_Test_1//60000//","retrained_graph.pb",1)
+    stdin1,stdout1=initSubprocess("D://Leo_Test_1//60000//","retrained_graph.pb",1)
     classifyFolder(stdin1,stdout1,'RN6000','',True,False)
-    stdin2,stdout2=initSubprocess("D://CARO//Leo_Test_1//124000//", "retrained_graph_v1.pb",2)
+    stdin2,stdout2=initSubprocess("D://Leo_Test_1//124000//", "retrained_graph_v1.pb",2)
     classifyFolder(stdin2,stdout2,'RN124000','GT',False,True)
     generateResults()
     print("Hola, soy el main")
