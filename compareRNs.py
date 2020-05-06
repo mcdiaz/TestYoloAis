@@ -6,7 +6,7 @@ import csv
 import argparse
 
 PATH_RUN_BAT_NEURAL_NET="F://YOLO//TestYoloAis//run-ScriptAis-RN1y2.bat"
-PATH_TEST_IMAGES="D://Leo_Test_1//test_images//van//"
+PATH_TEST_IMAGES="D://Leo_Test_1//test_images//car//"
 LABELS_RN6=list()
 LABELS_RN124=list()
 #Guardan en diccionario la cantidad de clasificaciones de los labels correspondientes a r1 y a r2
@@ -19,10 +19,8 @@ SUBPROCESS_R1=subprocess
 SUBPROCESS_R2=subprocess
 THRESHOLD_MIN=50.0
 THRESHOLD_MAX=10.0
-LABEL_TEST='van'
+LABEL_TEST='car'
 LIST_WRONG_LABEL=list()
-
-
 
 def loadLabels(listLabels,RN6,RN124):
     # procesar la salida del script de ais
@@ -75,6 +73,7 @@ def setBatFileAis(pathRunBat,pathImg,pathRN,pathTestImg,nameRN):
 # end function
 
 def initSubprocess(pathFolderRN,pathRunRN,RN):
+    #inicia el proceso de la herramienta de clasificacion de AIS y devuelve las ramas de input y output del proceso.
     stdin=()
     stdout=()
     if RN.__eq__(1):
@@ -109,6 +108,8 @@ def initSubprocess(pathFolderRN,pathRunRN,RN):
 # end function
 
 def classifyImage(folderImage, classify, rn124):
+    # Separa y chequea clasificacion obtenida de classify, chequea la primera y la segunda clasificacion. Solo si la primera
+    #clasificacion fue de una precision menor a THROSHOLD_MIN, chequea la segunda clasificacion y la devuelve junto a la primera.
     arrayClassify=classify.strip().replace(";","").split("|")
     label_1ro=str()
     label_2do=str()
@@ -118,7 +119,7 @@ def classifyImage(folderImage, classify, rn124):
         firstPos = arrayClassify[0].split("_")
         label_1ro = firstPos[0]
         preciss_1ro = float(firstPos[1])
-        if preciss_1ro.__le__(THRESHOLD_MIN) and arrayClassify.__sizeof__().__ge__(2):#si el primero es menor a 50
+        if preciss_1ro.__le__(THRESHOLD_MIN) and arrayClassify.__sizeof__().__ge__(2):#si el primero es menor al THRESHOLD_MIN
             secondPos = arrayClassify[1].split("_")
             label_2do= secondPos[0]
             preciss_2do = float(secondPos[1])
@@ -132,6 +133,8 @@ def classifyImage(folderImage, classify, rn124):
 # end function
 
 def loadDicc(classify, classRN):
+    #Lee la clasificación generada por la RN o GT, según corresponda y aumenta el valor correspondiente al valor que guarda
+    #el direccionario correspondiente
     print(classify)
     if classRN.__eq__('GT'):
         # print(classify.split("\\"))
@@ -153,7 +156,6 @@ def loadDicc(classify, classRN):
             elif classRN.startswith("RN124000"):
                 DICT_RN124_2DO[label_2do] = (DICT_RN124_2DO.get(label_2do) or 0) + 1
             #end if
-
 #end function
 
 def classifyFolder(stdin,stdout,ClassRN,GT,RN6,RN124):
@@ -180,8 +182,6 @@ def classifyFolder(stdin,stdout,ClassRN,GT,RN6,RN124):
         #if root != PATH_TEST_IMAGES and out.__eq__("waiting\n"): #forma de chequear con todos los labels
             # recorre todos los archivos contenidos en files
             for name in files:
-                # encuentra una imagen"
-                #if str(name).endswith(".jpg") or str(name).endswith(".jpeg"):
                 folderImage=root + name
                 print(folderImage)
                 line = '{}\n'.format(folderImage)#es importante que este definido el formato del salto de linea, porque eso tambien genera que la herramienta no lo tome como url de imagen, porque no terminaria en .jpg o .jpeg
