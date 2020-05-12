@@ -127,7 +127,7 @@ def runAlgAis(dirRunA,aisContain, threshold, folderData, folderStAis):
     #    aisContain es una instancia de la clase ContainerRN, que contiene un diccionario con la cantidad de objetos
     #       detectados por cada clasificacion
     # asocia el script de ais para deteccion y clasificacion
-    setBatFileAis(dirRunA,folderStAis)
+    setBatFile(dirRunA,folderStAis, '', 'AIS')
     sub = subprocess.Popen([r''+dirRunA], stdout=subprocess.PIPE, shell=False)
     # calcula tiempo inicial
     print("aca toma el tiempo")
@@ -223,7 +223,7 @@ def runAlgYolo(dirRunYolo, dirStoreYolo,yoloContain, dirVideoIn):
     #   yoloContain: instancia de la clase ContainerRN
     # corre el batch file que hizo juan para correr la red
     ###p=subprocess.Popen(paramYolo)
-    setBatFileYolo(dirRunYolo,dirStoreYolo, dirVideoIn)
+    setBatFile(dirRunYolo,dirStoreYolo, dirVideoIn, 'YOLO')
     p=subprocess.Popen([r''+dirRunYolo])
     # calcula el tiempo inicial
     yoloContain.initTime=time.time()
@@ -307,37 +307,38 @@ def printValues1(yoloContain, aisContain):
 
 ####################################################################################################################################
 # modifican los batch file que ejecutan los comandos de yolo y ais respectivamente
-def setBatFileAis(folderRunBat, folderStore):
+def setBatFile(folderRunBat, folderStore, folderVideo, algoritRN):
+    # args:
+    #   folderRunBat es la ruta que se encuentra el archivo .bat que se debe ejecutar, para ejecutar la herramienta
+    #   de AIS o la red neuronal YOLO.
+    #   folderStore es la ruta que se encuentra todos los TB que la herramienta de AIS debe clasificar. Para esto,
+    #   dentro de la herramienta, se busca la imagen que comienza con "clasificate", que ahi es donde la herramienta
+    #   actuara como siempre con cualquier iamgen a clasificar.. esta es una de las modificaciones que le hice a la
+    #   herramienta de AIS para el proposito. O los folder de las carpetas que tiene que clasificar por medio de su
+    #   forma YOLO.
+    # Este programa modifica el archivo batch que tiene la ruta de ejecucion de la herramienta AIS, cambiandole el
+    # argumento, parametro del programa, que indica el folder a clasificar.
     contenido=""
-    with open(folderRunBat,'r') as file:
-        column=file.read().split(' ')
-        for pos in range(1,len(column)):
-            if column[pos-1]=='--dir':
-                column[pos]='"'+folderStore+'"'
-                break
-            # end if
-        # end for
+    with open(folderRunBat,'r') as file: #abre el archivo batch
+        column=file.read().split()
+        if str(algoritRN).__eq__('AIS'):
+            for pos in range(1,len(column)):
+                if column[pos-1]=='--dir': # modifica el argumento de folder
+                    column[pos]='"'+folderStore+'"'
+                    break
+                # end if
+            # end for
+        elif str(algoritRN).__eq__('YOLO'):
+            for pos in range(1, len(column)):
+                if column[pos - 1] == '-v':
+                    column[pos] = folderVideo
+                elif column[pos - 1] == '-media':
+                    column[pos] = folderStore
+                # end if
+            # end for
         contenido=' '.join(column)
     # end with
     with open(folderRunBat,'w') as file:
-        file.write(contenido)
-    # end with
-# end function
-
-def setBatFileYolo(folderRunBat, folderStore, folderVideo):
-    contenido = ""
-    with open(folderRunBat, 'r') as file:
-        column = file.read().split()
-        for pos in range(1, len(column)):
-            if column[pos - 1] == '-v':
-                column[pos] = folderVideo
-            elif column[pos - 1] == '-media':
-                column[pos] = folderStore
-            # end if
-        # end for
-        contenido = ' '.join(column)
-    # end with
-    with open(folderRunBat, 'w') as file:
         file.write(contenido)
     # end with
 # end function
