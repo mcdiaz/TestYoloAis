@@ -4,7 +4,7 @@
 import os
 import subprocess
 import time
-from datetime import datetime
+from datetime import datetime, timedelta
 import json
 import csv
 
@@ -71,7 +71,8 @@ def totalTime(tblob):
 # end function
 
 def foundedTimeMacth(tblob):
-    for anotherTblob in (x for x in LIST_JSON if x['init'] in (tblob['init']-RANGE_TIME,tblob['init'],tblob['finish']+RANGE_TIME)):
+    miliseconds= datetime.microsecond
+    for anotherTblob in (x for x in LIST_JSON if x['init'] in [datetime.strptime(tblob['init'],'%Y-%m-%d %H:%M:%S.%f').time() - (miliseconds*RANGE_TIME) ,datetime.strptime(tblob['init'],'%Y-%m-%d %H:%M:%S.%f').time() + (miliseconds*RANGE_TIME)]):
         print(tblob," match con ",anotherTblob)
 
 # end function
