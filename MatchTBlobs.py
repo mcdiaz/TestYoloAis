@@ -77,10 +77,23 @@ def foundedTimeMacth(tblob):
 
 # end function
 
-def matchingTblobs():
-    for tblob in LIST_JSON:
-        foundedTimeMacth(tblob)
+def dif_in_microseconds(time1,time2):
+    h1, m1, s1, ms1 = time1.hour, time1.minute, time1.second, time1.microsecond
+    h2, m2, s2, ms2 = time2.hour, time2.minute, time2.second, time2.microsecond
+    t1_secs = s1 + 60 * (m1 + 60 * h1)
+    t2_secs = s2 + 60 * (m2 + 60 * h2)
+    t1_mcrs = ms1 + 1000000 * t1_secs
+    t2_mcrs = ms2 + 1000000 * t2_secs
+    print(t2_mcrs,t2_secs,t1_mcrs,t1_secs)
+    print("Diferencia en segundos:",t2_secs - t1_secs) #diferencia en segundos
+    print("Diferencia en micros:",t1_mcrs - t2_mcrs)
+    print(h1,m1,s1,ms1,time1)
 
+def matchingTblobs():
+    #for tblob in LIST_JSON:
+       # foundedTimeMacth(tblob)
+    #operator= datetime.strptime(LIST_JSON[0]['init'],'%Y-%m-%d %H:%M:%S.%f').time() - datetime.strptime(LIST_JSON[1]['init'],'%Y-%m-%d %H:%M:%S.%f').time()
+    dif_in_microseconds(datetime.strptime(LIST_JSON[0]['init'],'%Y-%m-%d %H:%M:%S.%f').time(),datetime.strptime(LIST_JSON[1]['init'],'%Y-%m-%d %H:%M:%S.%f').time())
 
 
 def main():
