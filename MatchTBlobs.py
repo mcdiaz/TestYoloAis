@@ -22,7 +22,7 @@ def sortJsonList(listJson, atribute):
     #ordena ascendentemente a todos los json segun tiempo de inicio al video
     #print(listJson)
     def takeInitPos(elem):
-        return datetime.strptime(elem[atribute],'%Y-%m-%d %H:%M:%S.%f').time()
+        return elem[atribute]
     # end internal function
     listJson.sort(key=takeInitPos)
     #print("#################################### Todos ordenados ######################################################")
@@ -41,9 +41,14 @@ def readAndAddJson(objData):
     objData['snapshot'] = snapshot
     if not objData['init'].__contains__("."):#si no tienen milisegundos, se los "setea en 0"
         objData['init'] = "{0}{1}{2}".format(objData['init'], ".", str(0))
+    #end if
     if not objData['finish'].__contains__("."):#si no tienen milisegundos, se los "setea en 0"
         objData['finish'] = "{0}{1}{2}".format(objData['finish'], ".", str(0))
-    LIST_JSON.append(objData)#agrega el objeto json encontrada al final
+    #end if
+    #se agrega los tiempos de inicio y fin ya seteados en formato "time"
+    objData['init']=datetime.strptime(objData['init'], '%Y-%m-%d %H:%M:%S.%f').time()
+    objData['finish']=datetime.strptime(objData['finish'], '%Y-%m-%d %H:%M:%S.%f').time()
+    LIST_JSON.append(objData)#agrega el objeto json, con todos sus atributos "parseados" encontrada al final
 # end function
 
 def readAndSortJsons(dirJsons):
@@ -67,17 +72,16 @@ def readAndSortJsons(dirJsons):
 # end function
 
 def totalTime(tblob):
-    return tblob['init']
+    #devuelve el tiempo total que estuvo en escena en microseconds
+    return dif_in_microseconds(tblob['init'],tblob['finish'])
 # end function
 
 def foundedTimeMacth(tblob):
-    miliseconds= datetime.microsecond
-    for anotherTblob in (x for x in LIST_JSON if x['init'] in [datetime.strptime(tblob['init'],'%Y-%m-%d %H:%M:%S.%f').time() - (miliseconds*RANGE_TIME) ,datetime.strptime(tblob['init'],'%Y-%m-%d %H:%M:%S.%f').time() + (miliseconds*RANGE_TIME)]):
-        print(tblob," match con ",anotherTblob)
-
+    
 # end function
 
 def dif_in_microseconds(time1,time2):
+    #obtiene la diferencia en microsegundos de dos tiempos pasados por parametro
     h1, m1, s1, ms1 = time1.hour, time1.minute, time1.second, time1.microsecond
     h2, m2, s2, ms2 = time2.hour, time2.minute, time2.second, time2.microsecond
     t1_secs = s1 + 60 * (m1 + 60 * h1)
@@ -88,19 +92,21 @@ def dif_in_microseconds(time1,time2):
     print("Diferencia en segundos:",t2_secs - t1_secs) #diferencia en segundos
     print("Diferencia en micros:",t1_mcrs - t2_mcrs)
     print(h1,m1,s1,ms1,time1)
+# end function
 
 def matchingTblobs():
-    #for tblob in LIST_JSON:
-       # foundedTimeMacth(tblob)
-    #operator= datetime.strptime(LIST_JSON[0]['init'],'%Y-%m-%d %H:%M:%S.%f').time() - datetime.strptime(LIST_JSON[1]['init'],'%Y-%m-%d %H:%M:%S.%f').time()
-    dif_in_microseconds(datetime.strptime(LIST_JSON[0]['init'],'%Y-%m-%d %H:%M:%S.%f').time(),datetime.strptime(LIST_JSON[1]['init'],'%Y-%m-%d %H:%M:%S.%f').time())
-
+    dif_in_microseconds(LIST_JSON[0]['init'],LIST_JSON[1]['init'])
+# end function
 
 def main():
     print('holi')
-    readAndSortJsons(PATH_JSON)#llama al metodo que lee todos los objetos json encontrados en el archivo .json y los
-    #agrega a LIST_JSON ordenados ascendentemente por tiempo de inicio a escena
-    matchingTblobs()
+    readAndSortJsons(PATH_JSON)#llama al metodo que lee todos los objetos json encontrados en el archivo .json y los agrega a LIST_JSON ordenados ascendentemente por tiempo de inicio a escena
+    if LIST_JSON:#si se cargo correctamente LIST_JSON, entonces pasa a los chequeos del path que se pasó
+        matchingTblobs()
+    else:
+        print("Ocurrió algún error no contemplado en el path que se pasó")
+    # end if
+# end main
 
 if __name__ == '__main__':
     main()
