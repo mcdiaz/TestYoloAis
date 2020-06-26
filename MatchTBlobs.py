@@ -4,17 +4,19 @@
 import os
 import subprocess
 import time
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, time
 import json
 import csv
 
 #TIME_INIT_VIDEO=datetime(0,0,0,0)
-RANGE_TIME=0.05 #rango de tiempo que se comparan los tb adyacentes en linea de tiempo ordenados
+RANGE_TIME={'init':time(),'final':time()} #rango de tiempo que se comparan los tb adyacentes en linea de tiempo ordenados
+COMPARE_MIN_TIME=100005 #strptime('0:0:0.5', '%H:%M:%S.%f').time() #minimo rango de tiempo a comparar: 5 microseg
 PATH_JSON="D://CARO//Colon_Montevideo//testObjetos.json"
 PATH_TBS_FOLDER="D://CARO//Colon_Montevideo//TBlobs//"
 DICT_MATCH=dict() #resultado con los paths de imagen de recortes que matchean como resultado, de la forma {nameFolder,
 # caracteristicas }
 LIST_JSON=list() #lista que va a contener todos los json que se encuentren registrados en el csv, ordenados ascendentemente
+TIME_INIT_VIDEO=time()
 # por el atributo init de cada tb
 
 # leer los json del directorio que contiene todos y agregarlos cada uno por vez
@@ -66,8 +68,12 @@ def readAndSortJsons(dirJsons):
         # end for
     # end with
     sortJsonList(LIST_JSON, 'init')#lista de tblobs tomados como objetos JSON, ordenados por el tiempo de inicio a escena
-    #if LIST_JSON:
-     #   TIME_INIT_VIDEO=LIST_JSON(0)['init']
+    if LIST_JSON:
+        TIME_INIT_VIDEO=LIST_JSON[0]['init']
+        RANGE_TIME['init']=TIME_INIT_VIDEO
+        RANGE_TIME['final']=datetime.strptime(str(TIME_INIT_VIDEO.hour)+':'+str(TIME_INIT_VIDEO.minute)+':'+str(TIME_INIT_VIDEO.second)+'.'+str((TIME_INIT_VIDEO.microsecond + COMPARE_MIN_TIME))
+                                              , '%H:%M:%S.%f').time()
+     # END IF
     #print(LIST_JSON)
 # end function
 
@@ -77,7 +83,7 @@ def totalTime(tblob):
 # end function
 
 def foundedTimeMacth(tblob):
-    
+    print('holi')
 # end function
 
 def dif_in_microseconds(time1,time2):
