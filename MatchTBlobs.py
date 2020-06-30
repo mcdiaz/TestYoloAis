@@ -19,9 +19,8 @@ LIST_JSON=list() #lista que va a contener todos los json que se encuentren regis
 TIME_INIT_VIDEO=time()
 # por el atributo init de cada tb
 
-# leer los json del directorio que contiene todos y agregarlos cada uno por vez
 def sortJsonList(listJson, atribute):
-    #ordena ascendentemente a todos los json segun tiempo de inicio al video
+    #ordena ascendentemente a todos los json segun tiempo de entrada al video
     #print(listJson)
     def takeInitPos(elem):
         return elem[atribute]
@@ -30,10 +29,9 @@ def sortJsonList(listJson, atribute):
     #print("#################################### Todos ordenados ######################################################")
 # end function
 
+# leer los json del directorio que contiene todos los tbs y agregarlos cada uno por vez
 def readAndAddJson(objData):
-    #Aca por cada objeto json que se envia, se deberia parsear los atributos de color,shape y snapshot_data
-    ######
-    # llamado al metodo para que ordene la lista de blobs por el atributo de time de forma ascendente
+    #por cada objeto json que se envia, se deberia parsear los atributos de color,shape y snapshot_data
     #findedJson=json.load('color','shape','snapshot') #parsea el json que contiene los atributos del TB
     color=json.loads(objData['color'])#parsea la lista de colors a objeto json
     shape = json.loads(objData['shape'])  # parsea la lista de shapes a objeto json
@@ -41,10 +39,10 @@ def readAndAddJson(objData):
     objData['color']=color
     objData['shape'] = shape
     objData['snapshot'] = snapshot
-    if not objData['init'].__contains__("."):#si no tienen milisegundos, se los "setea en 0"
+    if not objData['init'].__contains__("."):#si no tienen microseg, se los "setea en 0"
         objData['init'] = "{0}{1}{2}".format(objData['init'], ".", str(0))
     #end if
-    if not objData['finish'].__contains__("."):#si no tienen milisegundos, se los "setea en 0"
+    if not objData['finish'].__contains__("."):#si no tienen microseg, se los "setea en 0"
         objData['finish'] = "{0}{1}{2}".format(objData['finish'], ".", str(0))
     #end if
     #se agrega los tiempos de inicio y fin ya seteados en formato "time"
@@ -62,22 +60,24 @@ def readAndSortJsons(dirJsons):
     with open(dirJsons,'r') as fileJson:
         allJsons=json.loads(fileJson.read()) #lee toddo lo contenido en fileJson y lo parsea a un objeto json, guardandolo
         #en allJsons
-        #por cada objeto que se encuentra en data, se lo envia a readAndAddJson
+        #por cada objeto que se encuentra en data, se lo envia a readAndAddJson para que parsee y los agregue a la lista global de json
         for pos in allJsons['data']:
             readAndAddJson(pos)
         # end for
     # end with
+    # llamado al metodo para que ordene la lista de blobs por el atributo de time de forma ascendente
     sortJsonList(LIST_JSON, 'init')#lista de tblobs tomados como objetos JSON, ordenados por el tiempo de inicio a escena
+    #si se inicializo correctamente la lista de jsons, se setea los valores de inicio del video y rango de tiempo establecido para las comparaciones
     if LIST_JSON:
         TIME_INIT_VIDEO=LIST_JSON[0]['init']
         RANGE_TIME['init']=TIME_INIT_VIDEO
         RANGE_TIME['final']=datetime.strptime(str(TIME_INIT_VIDEO.hour)+':'+str(TIME_INIT_VIDEO.minute)+':'+str(TIME_INIT_VIDEO.second)+'.'+str((TIME_INIT_VIDEO.microsecond + COMPARE_MIN_TIME))
-                                              , '%H:%M:%S.%f').time()
+                                              , '%H:%M:%S.%f').time() #agrega una cantidad de microsegundos determinada para setear el "tiempo final"
      # END IF
     #print(LIST_JSON)
 # end function
 
-def totalTime(tblob):
+def totalTimeMicrosec(tblob):
     #devuelve el tiempo total que estuvo en escena en microseconds
     return dif_in_microseconds(tblob['init'],tblob['finish'])
 # end function
@@ -102,6 +102,14 @@ def dif_in_microseconds(time1,time2):
 
 def matchingTblobs():
     dif_in_microseconds(LIST_JSON[0]['init'],LIST_JSON[1]['init'])
+    def createAuxList():
+        list=[]
+        for elem in LIST_JSON:
+            if elem['init'] in {RANGE_TIME['init'],RANGE_TIME['final']}:
+                list.append(elem)
+        return list
+    rangeList=createAuxList()
+    print(rangeList)
 # end function
 
 def main():
